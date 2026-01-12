@@ -6,6 +6,9 @@ class DeploymentManager {
         this.game = game;
         this.renderer = renderer;
 
+        // Player team restriction for multiplayer
+        this.playerTeam = null; // null = allow both sides, 'RED'/'BLUE' = restrict
+
         // Deployment state - Only store type, not team (auto-assigned based on position)
         this.selectedUnitType = null;
         this.deployedUnits = {
@@ -96,6 +99,12 @@ class DeploymentManager {
         const team = this.determineTeamFromPosition(x);
         if (!team) return; // Outside deployment zones
 
+        // Validate player team restriction (multiplayer)
+        if (this.playerTeam && team !== this.playerTeam) {
+            console.warn(`[Deployment] Cannot place units on ${team} side. You are ${this.playerTeam}.`);
+            return; // Player not allowed to place on this side
+        }
+
         // Create unit at clicked position
         const unit = this.game.createUnit(this.selectedUnitType, team, x, y);
 
@@ -168,7 +177,8 @@ class DeploymentManager {
 
         const team = this.determineTeamFromPosition(x);
 
-        if (team) {
+        // Only show preview if in valid zone for player's team
+        if (team && (!this.playerTeam || team === this.playerTeam)) {
             this.previewX = x;
             this.previewY = y;
             this.previewTeam = team;

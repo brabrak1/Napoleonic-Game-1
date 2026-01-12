@@ -6,6 +6,7 @@
 class GameStateSync {
     constructor(game) {
         this.game = game;
+        this.playerTeam = null; // Set by MultiplayerManager
         this.lastSyncTime = 0;
         this.syncInterval = 1 / 15; // 15 Hz (66ms)
     }
@@ -55,7 +56,6 @@ class GameStateSync {
             entityCount: unit.entityCount,
             maxEntityCount: unit.maxEntityCount,
             formation: unit.formation,
-            isSelected: unit.isSelected,
             isReloading: unit.isReloading,
             reloadProgress: unit.reloadProgress,
             exhaustion: unit.exhaustion,
@@ -152,6 +152,20 @@ class GameStateSync {
 
         // Remove units not in remote state (dead units)
         this.game.units = this.game.units.filter(u => seenIds.has(u.id));
+
+        // Clear selection for opponent's units (prevent sync issues)
+        if (this.playerTeam) {
+            this.game.units.forEach(unit => {
+                if (unit.team !== this.playerTeam) {
+                    unit.isSelected = false;
+                }
+            });
+
+            // Clean up selectedUnits array
+            this.game.selectedUnits = this.game.selectedUnits.filter(
+                unit => unit.team === this.playerTeam
+            );
+        }
     }
 
     /**
@@ -197,9 +211,6 @@ class GameStateSync {
         if (localUnit.formation !== remoteUnit.formation) {
             localUnit.setFormation(remoteUnit.formation);
         }
-
-        // Selection (UI only, not critical)
-        localUnit.isSelected = remoteUnit.isSelected;
 
         // Current target (resolve by ID) - ensure null safety
         if (remoteUnit.currentTargetId !== null && remoteUnit.currentTargetId !== undefined) {

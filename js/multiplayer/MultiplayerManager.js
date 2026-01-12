@@ -99,6 +99,8 @@ class MultiplayerManager {
 
         // Restrict input to RED
         this.inputHandler.playerTeam = 'RED';
+        this.deploymentManager.playerTeam = 'RED';
+        this.stateSync.playerTeam = 'RED';
 
         // Show UI
         this.ui.show();
@@ -126,6 +128,8 @@ class MultiplayerManager {
 
         // Restrict input to BLUE
         this.inputHandler.playerTeam = 'BLUE';
+        this.deploymentManager.playerTeam = 'BLUE';
+        this.stateSync.playerTeam = 'BLUE';
 
         // Show UI
         this.ui.show();
@@ -140,6 +144,8 @@ class MultiplayerManager {
 
         // Restrict input to team
         this.inputHandler.playerTeam = this.myTeam;
+        this.deploymentManager.playerTeam = this.myTeam;
+        this.stateSync.playerTeam = this.myTeam;
 
         // GUEST: Transition to deployment scene after connection
         if (!this.isHost && this.sceneManager) {
@@ -253,6 +259,8 @@ class MultiplayerManager {
         this.myTeam = null;
         this.opponentTeam = null;
         this.inputHandler.playerTeam = null; // Allow all teams again
+        this.deploymentManager.playerTeam = null;
+        this.stateSync.playerTeam = null;
     }
 
     /**
