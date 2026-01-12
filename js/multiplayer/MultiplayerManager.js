@@ -154,6 +154,9 @@ class MultiplayerManager {
 
         // Hook deployment
         this.hookDeployment();
+
+        // Hook battle combat/movement
+        this.hookBattle();
     }
 
     /**
@@ -183,6 +186,17 @@ class MultiplayerManager {
                 }
                 break;
 
+            case 'MOVE_UNITS':
+                // Opponent moved units
+                if (data.unitIds && data.targetX !== undefined && data.targetY !== undefined) {
+                    const unitsToMove = this.game.units.filter(u => data.unitIds.includes(u.id));
+                    if (unitsToMove.length > 0) {
+                        console.log(`[MP] Moving ${unitsToMove.length} units for opponent`);
+                        this.game.moveUnits(unitsToMove, data.targetX, data.targetY);
+                    }
+                }
+                break;
+
             default:
                 console.warn(`[MP] Unknown data type: ${data.type}`);
         }
@@ -205,6 +219,31 @@ class MultiplayerManager {
                 const newUnit = this.game.units[this.game.units.length - 1];
                 const deployEvent = this.stateSync.serializeDeploymentEvent(newUnit);
                 this.peerConnection.send(deployEvent);
+            }
+        };
+    }
+
+    /**
+     * Hook into battle to sync movement
+     */
+    hookBattle() {
+        // Intercept game.moveSelectedUnits
+        const originalMoveSelectedUnits = this.game.moveSelectedUnits.bind(this.game);
+
+        this.game.moveSelectedUnits = (targetX, targetY) => {
+            // 1. Execute locally first
+            originalMoveSelectedUnits(targetX, targetY);
+
+            // 2. Broadcast to peer
+            if (this.game.selectedUnits.length > 0 && this.peerConnection.isConnected) {
+                const unitIds = this.game.selectedUnits.map(u => u.id);
+                this.peerConnection.send({
+                    type: 'MOVE_UNITS',
+                    unitIds: unitIds,
+                    targetX: targetX,
+                    targetY: targetY,
+                    timestamp: Date.now()
+                });
             }
         };
     }

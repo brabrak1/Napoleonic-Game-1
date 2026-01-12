@@ -427,17 +427,27 @@ class GameEngine {
      * @param {number} targetY - Target Y position
      */
     moveSelectedUnits(targetX, targetY) {
+        this.moveUnits(this.selectedUnits, targetX, targetY);
+    }
+
+    /**
+     * Move specific units to target position
+     * @param {Array<Unit>} units - List of units to move
+     * @param {number} targetX - Target X position
+     * @param {number} targetY - Target Y position
+     */
+    moveUnits(units, targetX, targetY) {
         // Filter out dead/undefined units (multiplayer sync safety)
-        this.selectedUnits = this.selectedUnits.filter(u => u && !u.isDead());
+        const activeUnits = units.filter(u => u && !u.isDead());
 
-        if (this.selectedUnits.length === 0) return;
+        if (activeUnits.length === 0) return;
 
-        // Get formation type from first selected unit (assume all have same formation)
-        const formation = this.selectedUnits[0].formation;
+        // Get formation type from first unit (assume all have same formation)
+        const formation = activeUnits[0].formation;
 
         // Calculate formation positions
         const positions = FormationSystem.calculateFormationPositions(
-            this.selectedUnits,
+            activeUnits,
             targetX,
             targetY,
             formation
