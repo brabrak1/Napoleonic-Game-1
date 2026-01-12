@@ -96,7 +96,10 @@ class FormationSystem {
         const unitArray = Array.isArray(units) ? units : [units];
 
         unitArray.forEach(unit => {
-            unit.setFormation(formationType);
+            // Null safety for multiplayer sync
+            if (unit && typeof unit.setFormation === 'function') {
+                unit.setFormation(formationType);
+            }
         });
     }
 

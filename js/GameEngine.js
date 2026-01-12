@@ -120,7 +120,10 @@ class GameEngine {
                 // 1. Check if we have a current target
                 if (unit.currentTarget) {
                     // Verify current target is still valid (alive, in range, active)
-                    if (unit.currentTarget.isDead() ||
+                    // Add null safety check for multiplayer sync
+                    if (!unit.currentTarget ||
+                        typeof unit.currentTarget.isDead !== 'function' ||
+                        unit.currentTarget.isDead() ||
                         !this.isTargetValid(unit, unit.currentTarget)) {
                         unit.currentTarget = null;
                         shouldScan = true; // Lost target, scan immediately
@@ -424,6 +427,9 @@ class GameEngine {
      * @param {number} targetY - Target Y position
      */
     moveSelectedUnits(targetX, targetY) {
+        // Filter out dead/undefined units (multiplayer sync safety)
+        this.selectedUnits = this.selectedUnits.filter(u => u && !u.isDead());
+
         if (this.selectedUnits.length === 0) return;
 
         // Get formation type from first selected unit (assume all have same formation)
@@ -439,6 +445,9 @@ class GameEngine {
 
         // Set individual targets for each unit
         for (const position of positions) {
+            // Additional safety check
+            if (!position.unit || !position.unit.setTarget) continue;
+
             // Skip if unit cannot move (SQUARE formation)
             if (position.unit.formation === 'SQUARE') continue;
 

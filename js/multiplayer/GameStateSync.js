@@ -53,13 +53,30 @@ class GameStateSync {
             targetX: unit.targetX,
             targetY: unit.targetY,
             entityCount: unit.entityCount,
+            maxEntityCount: unit.maxEntityCount,
             formation: unit.formation,
             isSelected: unit.isSelected,
             isReloading: unit.isReloading,
             reloadProgress: unit.reloadProgress,
             exhaustion: unit.exhaustion,
             isMeleeLocked: unit.isMeleeLocked,
-            currentTargetId: unit.currentTarget ? unit.currentTarget.id : null
+            currentTargetId: unit.currentTarget ? unit.currentTarget.id : null,
+            // Movement properties required by Unit.update()
+            maxSpeed: unit.maxSpeed,
+            baseMaxSpeed: unit.baseMaxSpeed,
+            speed: unit.speed,
+            turnRate: unit.turnRate,
+            collisionRadius: unit.collisionRadius,
+            movementBonus: unit.movementBonus,
+            movementPenalty: unit.movementPenalty,
+            speedMultiplier: unit.speedMultiplier,
+            // Combat modifiers required by formation system
+            fireRateBonus: unit.fireRateBonus,
+            accuracyBonus: unit.accuracyBonus,
+            vulnerabilityMultiplier: unit.vulnerabilityMultiplier,
+            damageBonus: unit.damageBonus,
+            directionalDefense: unit.directionalDefense,
+            cavalryDefense: unit.cavalryDefense
         };
     }
 
@@ -68,14 +85,21 @@ class GameStateSync {
      */
     serializeProjectile(proj) {
         return {
-            id: proj.id || Math.random(), // Ensure ID exists
+            id: proj.id || Math.random(),
             x: proj.x,
             y: proj.y,
             vx: proj.vx,
             vy: proj.vy,
             damage: proj.damage,
             team: proj.team,
-            shooter: proj.shooter ? proj.shooter.id : null
+            // Additional properties required by Projectile.update()
+            startX: proj.startX,
+            startY: proj.startY,
+            range: proj.range,
+            speed: proj.speed,
+            radius: proj.radius,
+            isDead: proj.isDead,
+            angle: proj.angle
         };
     }
 
@@ -145,10 +169,29 @@ class GameStateSync {
 
         // Combat state
         localUnit.entityCount = remoteUnit.entityCount;
+        localUnit.maxEntityCount = remoteUnit.maxEntityCount;
         localUnit.isReloading = remoteUnit.isReloading;
         localUnit.reloadProgress = remoteUnit.reloadProgress;
         localUnit.exhaustion = remoteUnit.exhaustion;
         localUnit.isMeleeLocked = remoteUnit.isMeleeLocked;
+
+        // Movement properties
+        localUnit.maxSpeed = remoteUnit.maxSpeed;
+        localUnit.baseMaxSpeed = remoteUnit.baseMaxSpeed;
+        localUnit.speed = remoteUnit.speed;
+        localUnit.turnRate = remoteUnit.turnRate;
+        localUnit.collisionRadius = remoteUnit.collisionRadius;
+        localUnit.movementBonus = remoteUnit.movementBonus;
+        localUnit.movementPenalty = remoteUnit.movementPenalty;
+        localUnit.speedMultiplier = remoteUnit.speedMultiplier;
+
+        // Combat modifiers
+        localUnit.fireRateBonus = remoteUnit.fireRateBonus;
+        localUnit.accuracyBonus = remoteUnit.accuracyBonus;
+        localUnit.vulnerabilityMultiplier = remoteUnit.vulnerabilityMultiplier;
+        localUnit.damageBonus = remoteUnit.damageBonus;
+        localUnit.directionalDefense = remoteUnit.directionalDefense;
+        localUnit.cavalryDefense = remoteUnit.cavalryDefense;
 
         // Formation
         if (localUnit.formation !== remoteUnit.formation) {
@@ -158,9 +201,10 @@ class GameStateSync {
         // Selection (UI only, not critical)
         localUnit.isSelected = remoteUnit.isSelected;
 
-        // Current target (resolve by ID)
-        if (remoteUnit.currentTargetId !== null) {
-            localUnit.currentTarget = this.game.units.find(u => u.id === remoteUnit.currentTargetId) || null;
+        // Current target (resolve by ID) - ensure null safety
+        if (remoteUnit.currentTargetId !== null && remoteUnit.currentTargetId !== undefined) {
+            const target = this.game.units.find(u => u.id === remoteUnit.currentTargetId);
+            localUnit.currentTarget = target || null;
         } else {
             localUnit.currentTarget = null;
         }
@@ -170,19 +214,31 @@ class GameStateSync {
      * Merge projectiles
      */
     mergeProjectiles(remoteProjectiles) {
-        // For simplicity: Replace all projectiles with remote state
-        // (Projectiles are transient and recreated frequently)
+        // Create proper Projectile instances from remote state
         this.game.projectiles = remoteProjectiles.map(p => {
-            return {
-                id: p.id,
-                x: p.x,
-                y: p.y,
-                vx: p.vx,
-                vy: p.vy,
-                damage: p.damage,
-                team: p.team,
-                shooter: this.game.units.find(u => u.id === p.shooter) || null
-            };
+            // Create a projectile instance
+            const proj = new Projectile(
+                p.x,
+                p.y,
+                p.angle,
+                p.speed,
+                p.damage,
+                p.team,
+                p.range
+            );
+
+            // Update with serialized state
+            proj.id = p.id;
+            proj.x = p.x;
+            proj.y = p.y;
+            proj.vx = p.vx;
+            proj.vy = p.vy;
+            proj.startX = p.startX;
+            proj.startY = p.startY;
+            proj.isDead = p.isDead;
+            proj.radius = p.radius;
+
+            return proj;
         });
     }
 
