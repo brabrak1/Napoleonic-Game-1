@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Test</title>
+</head>
+<body>
+    <h1>Napoleonic Wargame - Debug Test</h1>
+    <div id="output"></div>
+
+    <script src="js/config.js"></script>
+    <script src="js/Unit.js"></script>
+    <script src="js/CombatSystem.js"></script>
+    <script>
+        const output = document.getElementById('output');
+
+        // Test 1: Fire Arc Calculation
+        output.innerHTML += '<h2>Test 1: Fire Arc for Infantry</h2>';
+        const redInf = new Unit(1, 'INFANTRY', 'RED', 100, 400);
+        const blueInf = new Unit(2, 'INFANTRY', 'BLUE', 1100, 400);
+
+        // RED faces right (angle 0)
+        redInf.angle = 0;
+        blueInf.angle = Math.PI; // BLUE faces left
+
+        output.innerHTML += `<p>RED Infantry angle: ${redInf.angle} (${redInf.angle * 180 / Math.PI}°)</p>`;
+        output.innerHTML += `<p>RED Infantry fire arc (no formation): ${redInf.getFireArc()} (${redInf.getFireArc() * 180 / Math.PI}°)</p>`;
+        output.innerHTML += `<p>BLUE Infantry angle: ${blueInf.angle} (${blueInf.angle * 180 / Math.PI}°)</p>`;
+        output.innerHTML += `<p>BLUE Infantry fire arc (no formation): ${blueInf.getFireArc()} (${blueInf.getFireArc() * 180 / Math.PI}°)</p>`;
+
+        // Test isInFireArc
+        const redCanShootBlue = CombatSystem.isInFireArc(redInf, blueInf);
+        const blueCanShootRed = CombatSystem.isInFireArc(blueInf, redInf);
+
+        output.innerHTML += `<p><strong>RED can shoot BLUE:</strong> ${redCanShootBlue}</p>`;
+        output.innerHTML += `<p><strong>BLUE can shoot RED:</strong> ${blueCanShootRed}</p>`;
+
+        // Test 2: Formation Fire Arcs
+        output.innerHTML += '<h2>Test 2: Formation Fire Arcs</h2>';
+        redInf.setFormation('LINE');
+        blueInf.setFormation('LINE');
+
+        output.innerHTML += `<p>RED Infantry fire arc (LINE): ${redInf.getFireArc()} (${redInf.getFireArc() * 180 / Math.PI}°)</p>`;
+        output.innerHTML += `<p>BLUE Infantry fire arc (LINE): ${blueInf.getFireArc()} (${blueInf.getFireArc() * 180 / Math.PI}°)</p>`;
+
+        const redCanShootBlueLine = CombatSystem.isInFireArc(redInf, blueInf);
+        const blueCanShootRedLine = CombatSystem.isInFireArc(blueInf, redInf);
+
+        output.innerHTML += `<p><strong>RED (LINE) can shoot BLUE:</strong> ${redCanShootBlueLine}</p>`;
+        output.innerHTML += `<p><strong>BLUE (LINE) can shoot RED:</strong> ${blueCanShootRedLine}</p>`;
+
+        // Test 3: Cavalry
+        output.innerHTML += '<h2>Test 3: Cavalry Properties</h2>';
+        const redCav = new Unit(3, 'CAVALRY', 'RED', 100, 500);
+        const blueCav = new Unit(4, 'CAVALRY', 'BLUE', 1100, 500);
+
+        output.innerHTML += `<p>RED Cavalry max speed: ${redCav.maxSpeed}</p>`;
+        output.innerHTML += `<p>RED Cavalry charge speed threshold: ${redCav.chargeSpeed}</p>`;
+        output.innerHTML += `<p>RED Cavalry charge multiplier: ${redCav.chargeDamageMultiplier}</p>`;
+        output.innerHTML += `<p>BLUE Cavalry max speed: ${blueCav.maxSpeed}</p>`;
+
+        // Test 4: SQUARE formation
+        output.innerHTML += '<h2>Test 4: SQUARE Formation</h2>';
+        redInf.setFormation('SQUARE');
+        output.innerHTML += `<p>RED Infantry (SQUARE) max speed: ${redInf.maxSpeed} (should be 0)</p>`;
+        output.innerHTML += `<p>RED Infantry (SQUARE) directional defense: ${redInf.directionalDefense} (should be true)</p>`;
+        output.innerHTML += `<p>RED Infantry (SQUARE) cavalry defense: ${redInf.cavalryDefense} (should be 3.0)</p>`;
+        output.innerHTML += `<p>RED Infantry (SQUARE) fire arc: ${redInf.getFireArc()} (${redInf.getFireArc() * 180 / Math.PI}° - should be 360°)</p>`;
+    </script>
+</body>
+</html>

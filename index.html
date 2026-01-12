@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Napoleonic Wargame - 1v1 Tactical Battle</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles-multiplayer.css">
+</head>
+
+<body>
+    <!-- Start Scene -->
+    <div id="startScene" class="start-scene">
+        <div class="wooden-desk">
+            <div class="scroll-container">
+                <div class="scroll">
+                    <div class="scroll-content">
+                        <div class="laurel-left">&#x1F33F;</div>
+                        <div class="laurel-right">&#x1F33F;</div>
+                        <h1 class="title">NAPOLEONIC</h1>
+                        <h2 class="subtitle">WARGAME</h2>
+                        <div class="decorative-line">
+                            <span class="line-ornament">&#x2726;</span>
+                        </div>
+                        <div class="eagle-emblem">&#x1F985;</div>
+                        <div class="imperial-symbols">
+                            <span class="symbol">&#x2694;&#xFE0F;</span>
+                            <span class="symbol star">&#x2B50;</span>
+                            <span class="symbol">&#x1F3F0;</span>
+                        </div>
+                        <div class="decorative-line">
+                            <span class="line-ornament">&#x2726;</span>
+                        </div>
+                        <div class="battle-year">EST. 1805</div>
+                        <button id="startButton" class="start-button">&#x2694;&#xFE0F; LOCAL GAME &#x2694;&#xFE0F;</button>
+                        <button id="mpHostButton" class="start-button">🌐 HOST MULTIPLAYER (RED)</button>
+                        <button id="mpJoinButton" class="start-button">🌐 JOIN MULTIPLAYER (BLUE)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deployment Scene -->
+    <div id="deploymentScene" class="deployment-scene" style="display: none;">
+        <div class="deployment-header">
+            <h2>DEPLOYMENT PHASE</h2>
+            <p>Position your units on the battlefield</p>
+            <button id="startBattleButton" class="start-battle-button">START BATTLE</button>
+        </div>
+        <div class="game-container">
+            <canvas id="gameCanvas" width="1200" height="800"></canvas>
+        </div>
+        <div class="unit-toolbar">
+            <div class="toolbar-section unified-section">
+                <h3>SELECT UNIT TYPE</h3>
+                <p class="placement-hint">Place on LEFT for RED, RIGHT for BLUE</p>
+                <div class="unit-buttons">
+                    <button class="unit-spawn-btn" data-type="INFANTRY">
+                        <span class="unit-icon">&#x2B1B;</span>
+                        <span class="unit-label">Infantry</span>
+                    </button>
+                    <button class="unit-spawn-btn" data-type="CAVALRY">
+                        <span class="unit-icon">&#x2694;</span>
+                        <span class="unit-label">Cavalry</span>
+                    </button>
+                    <button class="unit-spawn-btn" data-type="CANNON">
+                        <span class="unit-icon">&#x1F4A3;</span>
+                        <span class="unit-label">Cannon</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="deployment-stats">
+                <div class="team-stats red-stats">
+                    <h4>RED ARMY</h4>
+                    <div class="unit-count" id="redInfantryCount">Infantry: 0</div>
+                    <div class="unit-count" id="redCavalryCount">Cavalry: 0</div>
+                    <div class="unit-count" id="redCannonCount">Cannon: 0</div>
+                </div>
+                <div class="team-stats blue-stats">
+                    <h4>BLUE ARMY</h4>
+                    <div class="unit-count" id="blueInfantryCount">Infantry: 0</div>
+                    <div class="unit-count" id="blueCavalryCount">Cavalry: 0</div>
+                    <div class="unit-count" id="blueCannonCount">Cannon: 0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Battle Scene -->
+    <div id="battleScene" class="battle-scene" style="display: none;">
+        <div class="game-container">
+            <canvas id="battleCanvas" width="1200" height="800"></canvas>
+        </div>
+
+        <!-- Controls Info -->
+        <div id="controlsInfo" class="controls-info">
+            <div class="controls-header">
+                <h3>Controls</h3>
+                <button id="minimizeControls" class="minimize-button">−</button>
+            </div>
+            <div class="controls-content">
+                <p><strong>Click:</strong> Select unit or move selected units</p>
+                <p><strong>Click + Drag:</strong> Select multiple units (when none selected)</p>
+                <p><strong>Escape:</strong> Deselect units</p>
+                <p><strong>L:</strong> Line Formation | <strong>C:</strong> Column Formation | <strong>F:</strong>
+                    Square
+                    Formation | <strong>N:</strong> No Formation</p>
+                <p><strong>R:</strong> Restart Game</p>
+            </div>
+        </div>
+
+        <!-- Settings Toggle Button -->
+        <button id="settingsToggle" class="settings-toggle">⚙ Settings</button>
+
+        <!-- Settings Panel -->
+        <div id="settingsPanel" class="settings-panel" style="display: none;">
+            <h2>Game Settings</h2>
+
+            <div class="setting-group">
+                <h3>Combat Parameters</h3>
+                <label>
+                    Reload Duration (seconds):
+                    <input type="range" id="reloadDuration" min="5" max="30" step="1" value="15">
+                    <span id="reloadDurationValue">15</span>
+                </label>
+                <label>
+                    Infantry Damage:
+                    <input type="range" id="infantryDamage" min="5" max="20" step="1" value="10">
+                    <span id="infantryDamageValue">10</span>
+                </label>
+                <label>
+                    Fire Range (pixels):
+                    <input type="range" id="fireRange" min="100" max="300" step="10" value="150">
+                    <span id="fireRangeValue">150</span>
+                </label>
+                <!-- Cannon Settings -->
+                <label>
+                    Cannon Reload (seconds):
+                    <input type="range" id="cannonReload" min="10" max="60" step="1" value="30">
+                    <span id="cannonReloadValue">30</span>
+                </label>
+                <label>
+                    Cannon Base Damage:
+                    <input type="range" id="cannonDamage" min="20" max="150" step="5" value="60">
+                    <span id="cannonDamageValue">60</span>
+                </label>
+                <label>
+                    Cannon Range (pixels):
+                    <input type="range" id="cannonRange" min="300" max="1200" step="50" value="700">
+                    <span id="cannonRangeValue">700</span>
+                </label>
+                <label>
+                    Cavalry Charge Multiplier:
+                    <input type="range" id="chargeMultiplier" min="2.0" max="5.0" step="0.1" value="3.0">
+                    <span id="chargeMultiplierValue">3.0</span>
+                </label>
+            </div>
+
+            <div class="setting-group">
+                <h3>Army Composition</h3>
+                <label>
+                    Red Infantry:
+                    <input type="number" id="redInfantry" min="0" max="20" value="6">
+                </label>
+                <label>
+                    Red Cavalry:
+                    <input type="number" id="redCavalry" min="0" max="20" value="4">
+                </label>
+                <label>
+                    Blue Infantry:
+                    <input type="number" id="blueInfantry" min="0" max="20" value="6">
+                </label>
+                <label>
+                    Blue Cavalry:
+                    <input type="number" id="blueCavalry" min="0" max="20" value="4">
+                </label>
+            </div>
+
+            <button id="applySettings" class="apply-button">Apply & Restart</button>
+        </div>
+
+        <!-- Unit Status Panel (Bottom) -->
+        <div class="unit-panel-container">
+            <div class="team-panel red-team">
+                <h3>RED TEAM</h3>
+                <div id="redUnitBars" class="unit-bars"></div>
+            </div>
+
+            <div class="team-panel blue-team">
+                <h3>BLUE TEAM</h3>
+                <div id="blueUnitBars" class="unit-bars"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Multiplayer Connection Panel -->
+    <div id="multiplayerPanel" class="mp-panel" style="display: none;">
+        <div class="mp-header">
+            <h3>🌐 Multiplayer</h3>
+            <button id="mpToggle" class="mp-toggle">−</button>
+        </div>
+
+        <div id="mpContent" class="mp-content">
+            <!-- Connection Status -->
+            <div id="mpStatus" class="mp-status disconnected">
+                <span id="mpStatusText">Offline</span>
+            </div>
+
+            <!-- Host Section -->
+            <div id="mpHostSection" class="mp-section">
+                <h4>Host Game (You = RED)</h4>
+                <p class="mp-label">Your Room Code:</p>
+                <div class="mp-code-row">
+                    <input type="text" id="mpHostCode" readonly value="Generating...">
+                    <button id="mpCopyCode" class="mp-btn-small">Copy</button>
+                </div>
+                <p class="mp-hint">Share this code with your friend!</p>
+            </div>
+
+            <!-- Join Section -->
+            <div id="mpJoinSection" class="mp-section">
+                <h4>Join Game (You = BLUE)</h4>
+                <p class="mp-label">Enter Room Code:</p>
+                <div class="mp-code-row">
+                    <input type="text" id="mpJoinCode" placeholder="Paste code here...">
+                    <button id="mpJoinBtn" class="mp-btn">Join</button>
+                </div>
+            </div>
+
+            <!-- Connected Peer Info -->
+            <div id="mpPeerInfo" class="mp-section" style="display: none;">
+                <h4>✅ Connected</h4>
+                <p>Your Team: <span id="mpYourTeam">-</span></p>
+                <p>Opponent: <span id="mpOpponentId">-</span></p>
+                <p>Latency: <span id="mpPing">-</span> ms</p>
+                <button id="mpDisconnect" class="mp-btn-disconnect">Disconnect</button>
+            </div>
+
+            <!-- Network Stats (Debug) -->
+            <div id="mpDebug" class="mp-debug" style="display: none;">
+                <p>Sent: <span id="mpSentCount">0</span> | Recv: <span id="mpRecvCount">0</span></p>
+                <p>Sync Rate: <span id="mpSyncRate">0</span> Hz</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Multiplayer Toast Notifications -->
+    <div id="mpToast" class="mp-toast" style="display: none;">
+        <span id="mpToastText"></span>
+    </div>
+
+    <!-- Load all JavaScript modules -->
+    <!-- PeerJS CDN for multiplayer -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+    <!-- Multiplayer Scripts -->
+    <script src="js/multiplayer/PeerConnection.js"></script>
+    <script src="js/multiplayer/GameStateSync.js"></script>
+    <script src="js/multiplayer/UIController.js"></script>
+    <script src="js/multiplayer/MultiplayerManager.js"></script>
+
+    <script src="js/config.js"></script>
+    <script src="js/Unit.js"></script>
+    <script src="js/Projectile.js"></script>
+    <script src="js/LOSSystem.js"></script>
+    <script src="js/CombatSystem.js"></script>
+    <script src="js/ReloadSystem.js"></script>
+    <script src="js/ExhaustionSystem.js"></script>
+    <script src="js/FormationSystem.js"></script>
+    <script src="js/VisualEffects.js"></script>
+    <script src="js/AudioManager.js"></script>
+    <script src="js/GameEngine.js"></script>
+    <script src="js/Renderer.js"></script>
+    <script src="js/InputHandler.js"></script>
+    <script src="js/UIManager.js"></script>
+    <script src="js/SettingsPanel.js"></script>
+    <script src="js/SceneManager.js"></script>
+    <script src="js/DeploymentManager.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
