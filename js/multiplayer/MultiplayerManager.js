@@ -155,6 +155,11 @@ class MultiplayerManager {
         this.deploymentManager.playerTeam = this.myTeam;
         this.stateSync.playerTeam = this.myTeam;
 
+        // Update settings panel to reflect multiplayer role
+        if (window.game && window.game.settingsPanel) {
+            window.game.settingsPanel.updateMultiplayerState();
+        }
+
         // GUEST: Transition to deployment scene after connection
         if (!this.isHost && this.sceneManager) {
             this.sceneManager.transitionTo('deployment');
@@ -387,6 +392,11 @@ class MultiplayerManager {
 
         // Reset ID base
         this.game.setUnitIdBase(0);
+
+        // Re-enable settings for single player
+        if (window.game && window.game.settingsPanel) {
+            window.game.settingsPanel.updateMultiplayerState();
+        }
     }
 
     /**

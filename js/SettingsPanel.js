@@ -94,6 +94,7 @@ class SettingsPanel {
     toggle() {
         if (this.panel.style.display === 'none' || !this.panel.style.display) {
             this.panel.style.display = 'block';
+            this.updateMultiplayerState(); // Refresh UI based on current role
         } else {
             this.panel.style.display = 'none';
         }
@@ -103,23 +104,23 @@ class SettingsPanel {
      * Apply settings and restart game
      */
     applySettings() {
+        // Check if guest in multiplayer
+        if (window.multiplayerManager &&
+            window.multiplayerManager.isActive() &&
+            !window.multiplayerManager.isHost) {
+            // Show toast notification
+            if (window.multiplayerManager.ui) {
+                window.multiplayerManager.ui.showToast('Only the host can change settings', true);
+            }
+            return; // Prevent guest from applying
+        }
+
         const settings = this.gatherSettings();
 
-        // Multiplayer Sync (Host Auth)
+        // Host-only broadcast in multiplayer
         if (window.multiplayerManager && window.multiplayerManager.isActive()) {
-            if (window.multiplayerManager.isHost) {
-                window.multiplayerManager.syncSettings(settings); // Host broadcasts
-                this.applyLocalSettings(settings); // Apply locally
-            } else {
-                // Guest tries to apply settings? For now, let's allow it but warn or sync back?
-                // Ideally Guest shouldn't, but let's allow updating local + asking host?
-                // Simplest: Behave as local, but send sync (Host will ignore or overwritten?)
-                // Let's assume Host-only broadcast. Guest changes are local-only (desync risk if game logic depends)
-                // BUT user asked for "settings feature available... for multiplayer".
-                // I'll apply locally and sync.
-                window.multiplayerManager.syncSettings(settings); // Allow guest to broadcast too?
-                this.applyLocalSettings(settings);
-            }
+            window.multiplayerManager.syncSettings(settings);
+            this.applyLocalSettings(settings);
         } else {
             this.applyLocalSettings(settings);
         }
@@ -233,5 +234,48 @@ class SettingsPanel {
             battleCanvas.width = width;
             battleCanvas.height = height;
         }
+    }
+
+    /**
+     * Update UI based on multiplayer role
+     */
+    updateMultiplayerState() {
+        const isGuest = window.multiplayerManager &&
+                        window.multiplayerManager.isActive() &&
+                        !window.multiplayerManager.isHost;
+
+        if (isGuest) {
+            this.applyButton.disabled = true;
+            this.applyButton.textContent = '🔒 Host Controls Settings';
+            this.applyButton.style.backgroundColor = '#666';
+            this.applyButton.style.cursor = 'not-allowed';
+
+            // Disable all inputs
+            this.disableInputs(true);
+        } else {
+            this.applyButton.disabled = false;
+            this.applyButton.textContent = 'Apply & Restart';
+            this.applyButton.style.backgroundColor = '#4caf50';
+            this.applyButton.style.cursor = 'pointer';
+
+            this.disableInputs(false);
+        }
+    }
+
+    /**
+     * Disable/enable all setting inputs
+     */
+    disableInputs(disabled) {
+        const inputs = this.panel.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.disabled = disabled;
+            if (disabled) {
+                input.style.opacity = '0.5';
+                input.style.cursor = 'not-allowed';
+            } else {
+                input.style.opacity = '1';
+                input.style.cursor = 'pointer';
+            }
+        });
     }
 }
