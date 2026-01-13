@@ -205,6 +205,17 @@ class MultiplayerManager {
                 }
                 break;
 
+            case 'FORMATION_CHANGE':
+                // Opponent changed formation
+                if (data.unitIds && data.formation !== undefined) {
+                    const unitsToUpdate = this.game.units.filter(u => data.unitIds.includes(u.id));
+                    if (unitsToUpdate.length > 0) {
+                        console.log(`[MP] Updating formation to ${data.formation} for ${unitsToUpdate.length} units`);
+                        FormationSystem.applyFormation(unitsToUpdate, data.formation);
+                    }
+                }
+                break;
+
             case 'RESTART':
                 // Opponent requested restart
                 console.log('[MP] Restart requested by peer');
@@ -278,7 +289,7 @@ class MultiplayerManager {
     }
 
     /**
-     * Hook into battle to sync movement
+     * Hook into battle to sync movement and formations
      */
     hookBattle() {
         // Intercept game.moveSelectedUnits
@@ -296,6 +307,25 @@ class MultiplayerManager {
                     unitIds: unitIds,
                     targetX: targetX,
                     targetY: targetY,
+                    timestamp: Date.now()
+                });
+            }
+        };
+
+        // Intercept game.setFormationForSelected
+        const originalSetFormation = this.game.setFormationForSelected.bind(this.game);
+
+        this.game.setFormationForSelected = (formationType) => {
+            // 1. Execute locally first
+            originalSetFormation(formationType);
+
+            // 2. Broadcast to peer
+            if (this.game.selectedUnits.length > 0 && this.peerConnection.isConnected) {
+                const unitIds = this.game.selectedUnits.map(u => u.id);
+                this.peerConnection.send({
+                    type: 'FORMATION_CHANGE',
+                    unitIds: unitIds,
+                    formation: formationType,
                     timestamp: Date.now()
                 });
             }

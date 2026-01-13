@@ -704,7 +704,8 @@ body {
 .settings-toggle {
     position: fixed;
     top: 10px;
-    right: 10px;
+    right: 340px;
+    /* Moved left to avoid Multiplayer Panel (width 320px) */
     padding: 10px 20px;
     background-color: #1976d2;
     color: white;
@@ -727,7 +728,8 @@ body {
 .settings-panel {
     position: fixed;
     top: 60px;
-    right: 10px;
+    right: 340px;
+    /* Aligned with toggle */
     width: 350px;
     max-height: 600px;
     background: rgba(0, 0, 0, 0.95);
