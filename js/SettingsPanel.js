@@ -56,11 +56,7 @@ class SettingsPanel {
             chargeMultiplierValue.textContent = parseFloat(e.target.value).toFixed(1);
         });
 
-        // Army composition
-        document.getElementById('redInfantry').value = CONFIG.RED_INFANTRY;
-        document.getElementById('redCavalry').value = CONFIG.RED_CAVALRY;
-        document.getElementById('blueInfantry').value = CONFIG.BLUE_INFANTRY;
-        document.getElementById('blueCavalry').value = CONFIG.BLUE_CAVALRY;
+
 
         // Cannon Settings
         const cannonReload = document.getElementById('cannonReload');
@@ -141,10 +137,6 @@ class SettingsPanel {
             cannonDamage: parseInt(document.getElementById('cannonDamage').value),
             cannonRange: parseInt(document.getElementById('cannonRange').value),
             chargeMultiplier: parseFloat(document.getElementById('chargeMultiplier').value),
-            redInfantry: Math.min(100, Math.max(0, parseInt(document.getElementById('redInfantry').value) || 0)),
-            redCavalry: Math.min(50, Math.max(0, parseInt(document.getElementById('redCavalry').value) || 0)),
-            blueInfantry: Math.min(100, Math.max(0, parseInt(document.getElementById('blueInfantry').value) || 0)),
-            blueCavalry: Math.min(50, Math.max(0, parseInt(document.getElementById('blueCavalry').value) || 0)),
             mapSize: document.getElementById('mapSize').value // New Map Size
         };
     }
@@ -161,11 +153,6 @@ class SettingsPanel {
         CONFIG.CANNON.BASE_DAMAGE = settings.cannonDamage;
         CONFIG.CANNON.FIRE_RANGE = settings.cannonRange;
         CONFIG.CAVALRY.CHARGE_MULTIPLIER = settings.chargeMultiplier;
-
-        CONFIG.RED_INFANTRY = settings.redInfantry;
-        CONFIG.RED_CAVALRY = settings.redCavalry;
-        CONFIG.BLUE_INFANTRY = settings.blueInfantry;
-        CONFIG.BLUE_CAVALRY = settings.blueCavalry;
 
         // Apply Map Size
         this.applyMapSize(settings.mapSize);
@@ -196,10 +183,6 @@ class SettingsPanel {
         document.getElementById('cannonDamage').value = settings.cannonDamage;
         document.getElementById('cannonRange').value = settings.cannonRange;
         document.getElementById('chargeMultiplier').value = settings.chargeMultiplier;
-        document.getElementById('redInfantry').value = settings.redInfantry;
-        document.getElementById('redCavalry').value = settings.redCavalry;
-        document.getElementById('blueInfantry').value = settings.blueInfantry;
-        document.getElementById('blueCavalry').value = settings.blueCavalry;
         document.getElementById('mapSize').value = settings.mapSize;
 
         this.applyLocalSettings(settings);
@@ -241,8 +224,8 @@ class SettingsPanel {
      */
     updateMultiplayerState() {
         const isGuest = window.multiplayerManager &&
-                        window.multiplayerManager.isActive() &&
-                        !window.multiplayerManager.isHost;
+            window.multiplayerManager.isActive() &&
+            !window.multiplayerManager.isHost;
 
         if (isGuest) {
             this.applyButton.disabled = true;
