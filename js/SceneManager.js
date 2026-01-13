@@ -94,8 +94,8 @@ class SceneManager {
                 // Reset deployment manager counts
                 if (this.deploymentManager) {
                     this.deploymentManager.deployedUnits = {
-                        RED: { INFANTRY: 0, CAVALRY: 0 },
-                        BLUE: { INFANTRY: 0, CAVALRY: 0 }
+                        RED: { INFANTRY: 0, CAVALRY: 0, CANNON: 0 },
+                        BLUE: { INFANTRY: 0, CAVALRY: 0, CANNON: 0 }
                     };
                     this.deploymentManager.updateAllCounts();
                     this.deploymentManager.enable();

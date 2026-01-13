@@ -142,6 +142,14 @@ class MultiplayerManager {
         this.ui.showConnected(this.myTeam, remotePeerId);
         this.ui.showToast(`Connected! You are ${this.myTeam}`);
 
+        // ID Separation: Host 0+, Guest 10000+
+        if (!this.isHost) {
+            this.game.setUnitIdBase(10000);
+            console.log('[MP] Guest ID Base set to 10000');
+        } else {
+            this.game.setUnitIdBase(0);
+        }
+
         // Restrict input to team
         this.inputHandler.playerTeam = this.myTeam;
         this.deploymentManager.playerTeam = this.myTeam;
@@ -346,6 +354,9 @@ class MultiplayerManager {
         this.inputHandler.playerTeam = null; // Allow all teams again
         this.deploymentManager.playerTeam = null;
         this.stateSync.playerTeam = null;
+
+        // Reset ID base
+        this.game.setUnitIdBase(0);
     }
 
     /**

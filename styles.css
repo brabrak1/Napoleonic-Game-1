@@ -32,23 +32,18 @@ body {
     background-color: #3e2723;
     background-image:
         /* Wood grain noise */
-        repeating-linear-gradient(
-            90deg,
+        repeating-linear-gradient(90deg,
             transparent,
             transparent 2px,
             rgba(0, 0, 0, 0.03) 2px,
-            rgba(0, 0, 0, 0.03) 4px
-        ),
-        repeating-linear-gradient(
-            0deg,
+            rgba(0, 0, 0, 0.03) 4px),
+        repeating-linear-gradient(0deg,
             transparent,
             transparent 1px,
             rgba(0, 0, 0, 0.02) 1px,
-            rgba(0, 0, 0, 0.02) 2px
-        ),
+            rgba(0, 0, 0, 0.02) 2px),
         /* Wood planks */
-        linear-gradient(
-            90deg,
+        linear-gradient(90deg,
             #2d1e18 0%,
             #3e2723 10%,
             #4e342e 20%,
@@ -59,8 +54,7 @@ body {
             #3e2723 70%,
             #2d1e18 80%,
             #3e2723 90%,
-            #4e342e 100%
-        ),
+            #4e342e 100%),
         /* Darker overlay for depth */
         radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
     background-size: 3px 100%, 100% 2px, 800px 100%, 100% 100%;
@@ -92,8 +86,15 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.8); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .scroll {
@@ -102,20 +103,16 @@ body {
     background-color: #f5e6d3;
     background-image:
         /* Parchment texture */
-        repeating-linear-gradient(
-            0deg,
+        repeating-linear-gradient(0deg,
             transparent,
             transparent 2px,
             rgba(139, 90, 43, 0.03) 2px,
-            rgba(139, 90, 43, 0.03) 4px
-        ),
-        repeating-linear-gradient(
-            90deg,
+            rgba(139, 90, 43, 0.03) 4px),
+        repeating-linear-gradient(90deg,
             transparent,
             transparent 2px,
             rgba(139, 90, 43, 0.02) 2px,
-            rgba(139, 90, 43, 0.02) 4px
-        ),
+            rgba(139, 90, 43, 0.02) 4px),
         /* Age spots and stains */
         radial-gradient(ellipse at 15% 20%, rgba(139, 90, 43, 0.08) 0%, transparent 20%),
         radial-gradient(ellipse at 85% 30%, rgba(139, 90, 43, 0.06) 0%, transparent 15%),
@@ -163,8 +160,7 @@ body {
             #8b5a2b 85%,
             #654321 90%,
             #8b5a2b 95%,
-            transparent 100%
-        );
+            transparent 100%);
     border-radius: 50%;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
@@ -199,8 +195,7 @@ body {
             #8b5a2b 85%,
             #654321 90%,
             #8b5a2b 95%,
-            transparent 100%
-        );
+            transparent 100%);
     border-radius: 50%;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
@@ -311,13 +306,27 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.08); }
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.08);
+    }
 }
 
 @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
 }
 
 .start-button {
@@ -349,12 +358,10 @@ body {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: linear-gradient(
-        45deg,
-        transparent,
-        rgba(255, 255, 255, 0.1),
-        transparent
-    );
+    background: linear-gradient(45deg,
+            transparent,
+            rgba(255, 255, 255, 0.1),
+            transparent);
     transform: rotate(45deg);
     transition: all 0.6s ease;
 }
@@ -706,12 +713,10 @@ body {
     cursor: pointer;
     font-size: 16px;
     font-weight: bold;
-    z-index: 1001;
-    display: none;
-}
-
-.battle-scene .settings-toggle {
+    z-index: 1700;
+    /* Higher than Deployment Header */
     display: block;
+    /* Always visible (Start scene covers it with z=2000) */
 }
 
 .settings-toggle:hover {
@@ -730,7 +735,8 @@ body {
     border-radius: 8px;
     padding: 20px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: 1800;
+    /* Higher than toggle */
 }
 
 .settings-panel h2 {

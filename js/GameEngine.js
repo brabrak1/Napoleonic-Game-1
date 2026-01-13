@@ -15,9 +15,18 @@ class GameEngine {
 
         // Unit ID counter
         this.nextUnitId = 0;
+        this.nextUnitIdBase = 0; // For multiplayer separation (Host=0, Guest=10000)
 
         // Don't auto-initialize armies - let deployment manager handle it
         // this.initializeArmies();
+    }
+
+    /**
+     * Set the base ID for new units (prevent multiplayer collisions)
+     */
+    setUnitIdBase(base) {
+        this.nextUnitIdBase = base;
+        this.nextUnitId = base;
     }
 
     /**
@@ -492,7 +501,7 @@ class GameEngine {
         this.gameTime = 0;
         this.gameOver = false;
         this.winner = null;
-        this.nextUnitId = 0;
+        this.nextUnitId = this.nextUnitIdBase;
         this.visualEffects.clear();
         if (this.audioManager && this.audioManager.stopAll) {
             this.audioManager.stopAll();
