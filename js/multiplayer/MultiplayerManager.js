@@ -172,8 +172,30 @@ class MultiplayerManager {
         // Hook deployment
         this.hookDeployment();
 
-        // Hook battle combat/movement
+        // Hook battle combat/movement (redundant with Host Authority if we only send commands, but good for now)
         this.hookBattle();
+
+        // Hook visual/audio effects (Host Only)
+        if (this.isHost) {
+            this.hookEffects();
+        }
+    }
+
+    /**
+     * Hook into VisualEffects and AudioManager to sync events
+     */
+    hookEffects() {
+        if (this.game.visualEffects) {
+            this.game.visualEffects.onEffect((type, data) => {
+                this.stateSync.queueEvent('visual', type, data);
+            });
+        }
+
+        if (this.game.audioManager) {
+            this.game.audioManager.onSound((type, data) => {
+                this.stateSync.queueEvent('audio', type, data);
+            });
+        }
     }
 
     /**
@@ -185,6 +207,11 @@ class MultiplayerManager {
                 // Host sends full state, guest receives
                 if (!this.isHost) {
                     this.stateSync.mergeRemoteState(data);
+
+                    // Process events (sounds/effects)
+                    if (data.events && data.events.length > 0) {
+                        this.processRemoteEvents(data.events);
+                    }
                 }
                 break;
 
@@ -192,6 +219,11 @@ class MultiplayerManager {
                 // Opponent deployed a unit
                 this.stateSync.applyDeploymentEvent(data);
                 if (this.deploymentManager && this.deploymentManager.updateAllCounts) {
+                    // Force update internal counts manually since applyDeploymentEvent uses GameEngine directly
+                    const remoteUnit = data.unit;
+                    if (remoteUnit && this.deploymentManager.deployedUnits[remoteUnit.team]) {
+                        this.deploymentManager.deployedUnits[remoteUnit.team][remoteUnit.type]++;
+                    }
                     this.deploymentManager.updateAllCounts();
                 }
                 break;
@@ -404,9 +436,48 @@ class MultiplayerManager {
     }
 
     /**
+     * Process remote events (visual/audio)
+     */
+    processRemoteEvents(events) {
+        events.forEach(event => {
+            if (event.category === 'visual') {
+                const fx = this.game.visualEffects;
+                if (!fx) return;
+
+                switch (event.type) {
+                    case 'muzzleFlash': fx.createMuzzleFlash(event.data.x, event.data.y, event.data.angle); break;
+                    case 'smoke': fx.createSmokeCloud(event.data.x, event.data.y); break;
+                    case 'explosion': fx.createExplosion(event.data.x, event.data.y); break;
+                    case 'shake': fx.applyScreenShake(event.data.intensity); break;
+                }
+            } else if (event.category === 'audio') {
+                const am = this.game.audioManager;
+                if (!am) return;
+
+                switch (event.type) {
+                    case 'musket': am.playMusketFire(event.data.x, event.data.y); break;
+                    case 'cannon': am.playCannonFire(event.data.x, event.data.y); break;
+                    case 'wounded': am.playWounded(event.data.x, event.data.y); break;
+                    case 'impact': am.playMeleeImpact(event.data.x, event.data.y); break;
+                    case 'clash': am.playMeleeClash(event.data.x, event.data.y); break;
+                    case 'charge': am.playCavalryCharge(event.data.x, event.data.y); break;
+                    case 'explosion': am.playExplosion(event.data.x, event.data.y); break;
+                }
+            }
+        });
+    }
+
+    /**
      * Check if multiplayer is active
      */
     isActive() {
         return this.isMultiplayer && this.peerConnection.isConnected;
+    }
+
+    /**
+     * Check if we are a guest (connected but not host)
+     */
+    isGuest() {
+        return this.isActive() && !this.isHost;
     }
 }

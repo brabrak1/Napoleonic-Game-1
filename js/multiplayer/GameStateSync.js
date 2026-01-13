@@ -9,6 +9,19 @@ class GameStateSync {
         this.playerTeam = null; // Set by MultiplayerManager
         this.lastSyncTime = 0;
         this.syncInterval = 1 / 15; // 15 Hz (66ms)
+        this.eventQueue = [];
+    }
+
+    /**
+     * Queue an event for transmission
+     */
+    queueEvent(category, type, data) {
+        this.eventQueue.push({
+            category,
+            type,
+            data,
+            timestamp: Date.now() // For ordering/debugging
+        });
     }
 
     /**
@@ -27,15 +40,21 @@ class GameStateSync {
      * Serialize full game state for transmission
      */
     serializeGameState() {
-        return {
+        const state = {
             type: 'GAME_STATE_SYNC',
             timestamp: Date.now(),
             gameTime: this.game.gameTime,
             gameOver: this.game.gameOver,
             winner: this.game.winner,
             units: this.game.units.map(u => this.serializeUnit(u)),
-            projectiles: this.game.projectiles.map(p => this.serializeProjectile(p))
+            projectiles: this.game.projectiles.map(p => this.serializeProjectile(p)),
+            events: [...this.eventQueue] // Send copy of events
         };
+
+        // Clear queue after creating packet
+        this.eventQueue = [];
+
+        return state;
     }
 
     /**
@@ -151,7 +170,18 @@ class GameStateSync {
         }
 
         // Remove units not in remote state (dead units)
-        this.game.units = this.game.units.filter(u => seenIds.has(u.id));
+        // EXCEPTION: Keep recently created local units (Guest deployed) that Host hasn't acknowledged yet
+        this.game.units = this.game.units.filter(u => {
+            const existsRemote = seenIds.has(u.id);
+            if (existsRemote) return true;
+
+            // If unit is local (high ID) and young (< 2000ms), keep it to prevent flickering
+            if (u.id >= 10000 && (Date.now() - u.creationTime < 2000)) {
+                return true;
+            }
+
+            return false;
+        });
 
         // Clear selection for opponent's units (prevent sync issues)
         if (this.playerTeam) {

@@ -4,6 +4,7 @@ class AudioManager {
     constructor() {
         this.masterVolume = CONFIG.AUDIO.MASTER_VOLUME;
         this.enabled = true;
+        this.onSoundCallback = null; // For multiplayer sync
 
         // Audio context (for future Web Audio API integration)
         this.sounds = {};
@@ -13,6 +14,13 @@ class AudioManager {
         this.lastSoundTime = {}; // debounce map
         this.soundsPlayedThisFrame = 0; // Hard cap counter
         this.initializeSounds();
+    }
+
+    /**
+     * Set callback for sound triggering
+     */
+    onSound(callback) {
+        this.onSoundCallback = callback;
     }
 
     /**
@@ -129,6 +137,11 @@ class AudioManager {
     playMusketFire(x, y) {
         if (!this.enabled) return;
 
+        // Notify callback (Multiplayer sync)
+        if (this.onSoundCallback) {
+            this.onSoundCallback('musket', { x, y });
+        }
+
         // Calculate volume based on distance from center of screen
         const centerX = CONFIG.CANVAS_WIDTH / 2;
         const centerY = CONFIG.CANVAS_HEIGHT / 2;
@@ -152,6 +165,11 @@ class AudioManager {
     playCannonFire(x, y) {
         if (!this.enabled) return;
 
+        // Notify callback
+        if (this.onSoundCallback) {
+            this.onSoundCallback('cannon', { x, y });
+        }
+
         const centerX = CONFIG.CANVAS_WIDTH / 2;
         const centerY = CONFIG.CANVAS_HEIGHT / 2;
         const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
@@ -173,6 +191,11 @@ class AudioManager {
      */
     playWounded(x, y) {
         if (!this.enabled) return;
+
+        // Notify callback
+        if (this.onSoundCallback) {
+            this.onSoundCallback('wounded', { x, y });
+        }
 
         const centerX = CONFIG.CANVAS_WIDTH / 2;
         const centerY = CONFIG.CANVAS_HEIGHT / 2;
@@ -226,6 +249,12 @@ class AudioManager {
      */
     playMeleeImpact(x, y) {
         if (!this.enabled) return;
+
+        // Notify callback
+        if (this.onSoundCallback) {
+            this.onSoundCallback('impact', { x, y });
+        }
+
         const centerX = CONFIG.CANVAS_WIDTH / 2;
         const centerY = CONFIG.CANVAS_HEIGHT / 2;
         const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
@@ -240,6 +269,12 @@ class AudioManager {
      */
     playMeleeClash(x, y) {
         if (!this.enabled) return;
+
+        // Notify callback
+        if (this.onSoundCallback) {
+            this.onSoundCallback('clash', { x, y });
+        }
+
         const centerX = CONFIG.CANVAS_WIDTH / 2;
         const centerY = CONFIG.CANVAS_HEIGHT / 2;
         const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
@@ -257,6 +292,11 @@ class AudioManager {
     playCavalryCharge(x, y) {
         if (!this.enabled) return;
 
+        // Notify callback
+        if (this.onSoundCallback) {
+            this.onSoundCallback('charge', { x, y });
+        }
+
         const centerX = CONFIG.CANVAS_WIDTH / 2;
         const centerY = CONFIG.CANVAS_HEIGHT / 2;
         const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
@@ -272,6 +312,11 @@ class AudioManager {
      */
     playExplosion(x, y) {
         if (!this.enabled) return;
+
+        // Notify callback
+        if (this.onSoundCallback) {
+            this.onSoundCallback('explosion', { x, y });
+        }
 
         const centerX = CONFIG.CANVAS_WIDTH / 2;
         const centerY = CONFIG.CANVAS_HEIGHT / 2;

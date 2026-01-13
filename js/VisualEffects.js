@@ -5,6 +5,14 @@ class VisualEffects {
         this.particles = [];
         this.shakeOffset = { x: 0, y: 0 };
         this.shakeTimer = 0;
+        this.onEffectCallback = null; // For multiplayer sync
+    }
+
+    /**
+     * Set callback for effect triggering
+     */
+    onEffect(callback) {
+        this.onEffectCallback = callback;
     }
 
     /**
@@ -13,7 +21,18 @@ class VisualEffects {
      * @param {number} y - Y position
      * @param {number} angle - Firing angle
      */
+    /**
+     * Create muzzle flash effect
+     * @param {number} x - X position
+     * @param {number} y - Y position
+     * @param {number} angle - Firing angle
+     */
     createMuzzleFlash(x, y, angle) {
+        // Notify callback (Multiplayer Host sync)
+        if (this.onEffectCallback) {
+            this.onEffectCallback('muzzleFlash', { x, y, angle });
+        }
+
         // Yellow flash at gun position (extended forward from unit)
         const flashX = x + Math.cos(angle) * 15;
         const flashY = y + Math.sin(angle) * 15;
@@ -41,6 +60,11 @@ class VisualEffects {
      * @param {number} y - Y position
      */
     createSmokeCloud(x, y) {
+        // Notify callback
+        if (this.onEffectCallback) {
+            this.onEffectCallback('smoke', { x, y });
+        }
+
         // Create multiple smoke particles
         for (let i = 0; i < CONFIG.EFFECTS.SMOKE_PARTICLES; i++) {
             const angle = Math.random() * Math.PI * 2;
@@ -70,6 +94,11 @@ class VisualEffects {
      * @param {number} y - Y position
      */
     createExplosion(x, y) {
+        // Notify callback
+        if (this.onEffectCallback) {
+            this.onEffectCallback('explosion', { x, y });
+        }
+
         const particleCount = 15;
 
         for (let i = 0; i < particleCount; i++) {
@@ -96,6 +125,11 @@ class VisualEffects {
      * @param {number} intensity - Shake intensity in pixels
      */
     applyScreenShake(intensity = CONFIG.EFFECTS.SCREEN_SHAKE_INTENSITY) {
+        // Notify callback
+        if (this.onEffectCallback) {
+            this.onEffectCallback('shake', { intensity });
+        }
+
         this.shakeOffset = {
             x: (Math.random() - 0.5) * intensity * 2,
             y: (Math.random() - 0.5) * intensity * 2

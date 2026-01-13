@@ -13,7 +13,9 @@ class Unit {
         this.vy = 0;
         this.angle = 0; // facing direction in radians
         this.targetX = null;
+        this.targetX = null;
         this.targetY = null;
+        this.creationTime = Date.now(); // For sync smoothing
 
         // Stats based on unit type
         if (type === 'INFANTRY') {

@@ -89,10 +89,23 @@ class NapoleonicWargame {
 
             // Only update game logic if in battle mode
             if (this.sceneManager.isBattleMode()) {
-                // Update game state
-                this.game.update(deltaTime);
+                // HOST AUTHORITY: Only Host (or SP) runs the game simulation
+                // Guest only receives state updates
+                const isGuest = this.multiplayerManager && this.multiplayerManager.isGuest();
 
-                // Update UI
+                if (!isGuest) {
+                    // Update game state
+                    this.game.update(deltaTime);
+                } else {
+                    // GUEST: Only update visual effects and local interpolation
+                    // We still accept the Host's state in multiplayerManager.update()
+                    this.visualEffects.update(deltaTime);
+
+                    // Optional: Run projectile update for smooth interpolation? 
+                    // For now, let's rely on sync to position projectiles to avoid double-simulation artifacts.
+                }
+
+                // Update UI (everyone does this)
                 this.uiManager.update();
 
                 // Update multiplayer sync
