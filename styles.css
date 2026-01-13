@@ -972,23 +972,60 @@ body {
 /* iPad Portrait Optimization (768px - 1024px width) */
 @media (max-width: 1024px) {
     .unit-spawn-btn {
-        padding: 5px;
-        min-width: 60px;
-        max-width: 80px;
+        padding: 4px;
+        min-width: 50px;
+        max-width: 70px;
+        min-height: 50px;
+        /* Reduced height */
     }
 
     .unit-spawn-btn .unit-icon {
-        font-size: 20px;
+        font-size: 18px;
     }
 
     .unit-spawn-btn .unit-label {
-        font-size: 10px;
+        font-size: 9px;
         letter-spacing: 0;
+        margin-top: 2px;
     }
 
     .unit-toolbar {
-        padding: 10px 15px;
+        padding: 8px 10px;
+        gap: 5px;
+        max-height: 25vh;
+        /* Limit height */
+        overflow-y: auto;
+    }
+
+    .toolbar-section h3 {
+        font-size: 14px;
+        margin-bottom: 2px;
+    }
+
+    /* Compact Stats */
+    .deployment-stats {
+        margin-top: 5px;
         gap: 10px;
+    }
+
+    .team-stats {
+        padding: 5px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .team-stats h4 {
+        display: none;
+        /* Hide header to save space */
+    }
+
+    .unit-count {
+        font-size: 10px;
+        padding: 2px 4px;
+        margin: 0;
     }
 
     .settings-panel {
@@ -1245,8 +1282,10 @@ body.mobile-mode .unit-toolbar {
     /* Tighter spacing for mobile */
     padding: 8px 12px;
     gap: 12px;
-    max-height: 35vh; /* Cap at 35% of viewport height */
-    overflow-y: auto; /* Allow scrolling if needed */
+    max-height: 35vh;
+    /* Cap at 35% of viewport height */
+    overflow-y: auto;
+    /* Allow scrolling if needed */
 }
 
 body.mobile-mode .unified-section {
@@ -1270,7 +1309,8 @@ body.mobile-mode .placement-hint {
 body.mobile-mode .deployment-stats {
     /* Stack stats vertically on mobile */
     flex-direction: column;
-    gap: 12px; /* Reduced from 30px */
+    gap: 12px;
+    /* Reduced from 30px */
 }
 
 body.mobile-mode .team-stats {
@@ -1280,15 +1320,18 @@ body.mobile-mode .team-stats {
 
 body.mobile-mode .team-stats h4 {
     /* Smaller team headers */
-    font-size: 14px; /* Reduced from 18px */
+    font-size: 14px;
+    /* Reduced from 18px */
     margin-bottom: 6px;
 }
 
 body.mobile-mode .unit-count {
     /* Smaller unit count text */
-    font-size: 11px; /* Reduced from 14px */
+    font-size: 11px;
+    /* Reduced from 14px */
     gap: 6px;
-    margin: 4px 0; /* Reduced from 5px */
+    margin: 4px 0;
+    /* Reduced from 5px */
 }
 
 body.mobile-mode .unit-count .icon {
@@ -1298,7 +1341,8 @@ body.mobile-mode .unit-count .icon {
 
 /* Tablet mode: slightly larger than mobile but still compact */
 body.tablet-mode .unit-toolbar {
-    max-height: 40vh; /* Slightly more space on tablets */
+    max-height: 40vh;
+    /* Slightly more space on tablets */
     padding: 10px 15px;
 }
 

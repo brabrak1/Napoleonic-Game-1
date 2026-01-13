@@ -150,10 +150,9 @@ class InputHandler {
         }
 
         // Only handle input in battle or deployment modes
-        if (this.sceneManager &&
-            !this.sceneManager.isBattleMode() &&
-            !this.sceneManager.isDeploymentMode()) {
-            return; // Block only in start scene
+        // Only handle input in battle mode (if scene manager exists)
+        if (this.sceneManager && !this.sceneManager.isBattleMode()) {
+            return; // Block input in start, deployment, etc.
         }
 
         const pos = this.getTouchPos(e);
@@ -237,6 +236,9 @@ class InputHandler {
                 console.log('[Mobile] Tap-to-move triggered');
                 this.game.moveSelectedUnits(pos.x, pos.y);
                 this.renderer.clearMovementTarget();
+
+                // DRAG-AND-RELEASE: Deselect after moving
+                this.game.clearSelection();
             } else if (!tappedUnit && this.game.selectedUnits.length === 0) {
                 // TAP-TO-DESELECT: No selection + tap empty = clear (already handled)
                 console.log('[Mobile] Tap-to-deselect triggered');
@@ -248,6 +250,9 @@ class InputHandler {
                 // Units were selected: move them to tap/drag endpoint
                 this.game.moveSelectedUnits(pos.x, pos.y);
                 this.renderer.clearMovementTarget();
+
+                // DRAG-AND-RELEASE: Deselect after moving
+                this.game.clearSelection();
             } else if (dx > 5 || dy > 5) {
                 // No units selected and dragged: complete selection box
                 this.game.selectUnitsInBox(
