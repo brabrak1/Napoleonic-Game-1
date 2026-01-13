@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drag Test</title>
+    <style>
+        body { margin: 20px; font-family: Arial; }
+        #testCanvas {
+            border: 2px solid #333;
+            cursor: crosshair;
+            display: block;
+            margin: 20px 0;
+        }
+        .button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border: 2px solid #333;
+            background: #fff;
+        }
+        .button.selected { background: #4CAF50; color: white; }
+        #log {
+            background: #f0f0f0;
+            padding: 10px;
+            height: 200px;
+            overflow-y: scroll;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Drag-to-Deploy Test</h1>
+    <div>
+        <button class="button" id="infantryBtn">Infantry</button>
+        <button class="button" id="cavalryBtn">Cavalry</button>
+        <button class="button" id="cannonBtn">Cannon</button>
+    </div>
+    <canvas id="testCanvas" width="1200" height="800"></canvas>
+    <h3>Console Log:</h3>
+    <div id="log"></div>
+
+    <script>
+        // Simple test implementation
+        const canvas = document.getElementById('testCanvas');
+        const ctx = canvas.getContext('2d');
+        const logDiv = document.getElementById('log');
+
+        function log(message) {
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        let selectedType = null;
+        let isDragging = false;
+        let dragStartX = null;
+        let dragStartY = null;
+        let dragCurrentX = null;
+        let dragCurrentY = null;
+        const UNIT_SPACING = 40;
+        const MIN_DRAG_DISTANCE = 50;
+        const units = [];
+
+        // Button handlers
+        document.getElementById('infantryBtn').onclick = function() {
+            selectedType = 'INFANTRY';
+            updateButtons();
+            log('Selected INFANTRY');
+        };
+        document.getElementById('cavalryBtn').onclick = function() {
+            selectedType = 'CAVALRY';
+            updateButtons();
+            log('Selected CAVALRY');
+        };
+        document.getElementById('cannonBtn').onclick = function() {
+            selectedType = 'CANNON';
+            updateButtons();
+            log('Selected CANNON');
+        };
+
+        function updateButtons() {
+            document.querySelectorAll('.button').forEach(btn => btn.classList.remove('selected'));
+            if (selectedType) {
+                document.getElementById(selectedType.toLowerCase() + 'Btn').classList.add('selected');
+            }
+        }
+
+        // Mouse handlers
+        canvas.addEventListener('mousedown', (e) => {
+            log('MOUSEDOWN event fired');
+
+            if (!selectedType) {
+                log('  → No unit type selected');
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            log(`  → Position: (${x.toFixed(0)}, ${y.toFixed(0)})`);
+
+            isDragging = true;
+            dragStartX = x;
+            dragStartY = y;
+            dragCurrentX = x;
+            dragCurrentY = y;
+
+            log('  → Drag started');
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const rect = canvas.getBoundingClientRect();
+                dragCurrentX = e.clientX - rect.left;
+                dragCurrentY = e.clientY - rect.top;
+                render();
+            }
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            log('MOUSEUP event fired');
+
+            if (!isDragging) {
+                log('  → Not dragging, ignoring');
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            const endX = e.clientX - rect.left;
+            const endY = e.clientY - rect.top;
+
+            const dx = endX - dragStartX;
+            const dy = endY - dragStartY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            log(`  → Distance: ${distance.toFixed(1)}px (threshold: ${MIN_DRAG_DISTANCE}px)`);
+
+            if (distance < MIN_DRAG_DISTANCE) {
+                log('  → SHORT DRAG: Placing 1 unit');
+                placeUnit(dragStartX, dragStartY);
+            } else {
+                const numUnits = Math.max(2, Math.floor(distance / UNIT_SPACING));
+                log(`  → LONG DRAG: Placing ${numUnits} units`);
+                for (let i = 0; i < numUnits; i++) {
+                    const t = numUnits === 1 ? 0 : i / (numUnits - 1);
+                    const x = dragStartX + t * (endX - dragStartX);
+                    const y = dragStartY + t * (endY - dragStartY);
+                    placeUnit(x, y);
+                }
+            }
+
+            isDragging = false;
+            dragStartX = null;
+            dragStartY = null;
+            dragCurrentX = null;
+            dragCurrentY = null;
+            render();
+        });
+
+        function placeUnit(x, y) {
+            units.push({ x, y, type: selectedType });
+            log(`  → Unit placed at (${x.toFixed(0)}, ${y.toFixed(0)})`);
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw grid
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 50) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Draw deployed units
+            units.forEach(unit => {
+                ctx.fillStyle = unit.type === 'INFANTRY' ? '#ff4444' :
+                                unit.type === 'CAVALRY' ? '#4444ff' : '#44ff44';
+                ctx.beginPath();
+                ctx.arc(unit.x, unit.y, 10, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw drag preview
+            if (isDragging && dragStartX !== null && dragCurrentX !== null) {
+                const dx = dragCurrentX - dragStartX;
+                const dy = dragCurrentY - dragStartY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance >= MIN_DRAG_DISTANCE) {
+                    const numUnits = Math.max(2, Math.floor(distance / UNIT_SPACING));
+
+                    // Draw line
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(dragStartX, dragStartY);
+                    ctx.lineTo(dragCurrentX, dragCurrentY);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // Draw circles
+                    ctx.fillStyle = '#FFD700';
+                    ctx.globalAlpha = 0.5;
+                    for (let i = 0; i < numUnits; i++) {
+                        const t = numUnits === 1 ? 0 : i / (numUnits - 1);
+                        const x = dragStartX + t * (dragCurrentX - dragStartX);
+                        const y = dragStartY + t * (dragCurrentY - dragStartY);
+                        ctx.beginPath();
+                        ctx.arc(x, y, 8, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Draw count
+                    ctx.globalAlpha = 1.0;
+                    ctx.fillStyle = '#FFD700';
+                    ctx.font = 'bold 16px Arial';
+                    ctx.fillText(`${numUnits} units`, dragCurrentX + 15, dragCurrentY - 15);
+                }
+            }
+        }
+
+        log('Test initialized. Select a unit type and drag on the canvas.');
+        render();
+    </script>
+</body>
+</html>

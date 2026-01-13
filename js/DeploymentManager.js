@@ -151,14 +151,24 @@ class DeploymentManager {
      * @param {MouseEvent} e - Mouse event
      */
     handleCanvasMouseDown(e) {
-        if (!this.selectedUnitType) return;
+        console.log('[Deployment] Mouse down event fired');
+
+        if (!this.selectedUnitType) {
+            console.log('[Deployment] No unit type selected, ignoring mousedown');
+            return;
+        }
 
         const rect = this.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
+        console.log('[Deployment] Mouse down at canvas position:', x, y);
+
         // Check if in valid deployment zone
-        if (!this.isInDeploymentZone(x)) return;
+        if (!this.isInDeploymentZone(x)) {
+            console.log('[Deployment] Position outside deployment zone, ignoring');
+            return;
+        }
 
         // Start drag
         this.isDragging = true;
@@ -175,25 +185,30 @@ class DeploymentManager {
      * @param {MouseEvent} e - Mouse event
      */
     handleCanvasMouseUp(e) {
+        console.log('[Deployment] Mouse up event fired, isDragging:', this.isDragging);
+
         if (!this.isDragging) return;
 
+        // Get canvas position (works even if event fired on document)
         const rect = this.canvas.getBoundingClientRect();
-        const endX = e.clientX - rect.left;
-        const endY = e.clientY - rect.top;
+        const endX = (e.clientX || 0) - rect.left;
+        const endY = (e.clientY || 0) - rect.top;
 
         // Calculate drag distance
         const dx = endX - this.dragStartX;
         const dy = endY - this.dragStartY;
         const dragDistance = Math.sqrt(dx * dx + dy * dy);
 
-        console.log('[Deployment] Drag ended, distance:', dragDistance);
+        console.log('[Deployment] Drag ended at', endX, endY, 'distance:', dragDistance, 'threshold:', this.MIN_DRAG_DISTANCE);
 
         if (dragDistance < this.MIN_DRAG_DISTANCE) {
             // SHORT DRAG: Place single unit (like a click)
+            console.log('[Deployment] Short drag, placing single unit');
             this.placeUnitAt(this.dragStartX, this.dragStartY);
         } else {
             // LONG DRAG: Place multiple units along line
             const numUnits = Math.max(2, Math.floor(dragDistance / this.UNIT_SPACING));
+            console.log('[Deployment] Long drag, placing', numUnits, 'units');
             this.placeUnitsAlongLine(this.dragStartX, this.dragStartY, endX, endY, numUnits);
 
             // Suppress the click event that will follow
@@ -455,10 +470,14 @@ class DeploymentManager {
         this.canvas.addEventListener('mousemove', this.canvasMouseMoveHandler);
 
         // DESKTOP ONLY: Drag-to-deploy
+        console.log('[Deployment] window.isMobile =', window.isMobile);
         if (!window.isMobile) {
+            console.log('[Deployment] Registering drag-to-deploy handlers (desktop mode)');
             this.canvas.addEventListener('mousedown', this.canvasMouseDownHandler);
             this.canvas.addEventListener('mouseup', this.canvasMouseUpHandler);
             document.addEventListener('mouseup', this.canvasMouseUpHandler); // Global fallback
+        } else {
+            console.log('[Deployment] Skipping drag handlers (mobile mode)');
         }
 
         // Added Touch Support (mobile only)
