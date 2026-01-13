@@ -144,6 +144,11 @@ class InputHandler {
     onTouchStart(e) {
         e.preventDefault(); // Prevent scrolling
 
+        // Only handle touch on battle canvas (deployment has its own handler)
+        if (e.target.id !== 'battleCanvas') {
+            return; // Let DeploymentManager handle gameCanvas touches
+        }
+
         // Only handle input in battle or deployment modes
         if (this.sceneManager &&
             !this.sceneManager.isBattleMode() &&
@@ -175,6 +180,12 @@ class InputHandler {
      */
     onTouchMove(e) {
         e.preventDefault(); // Prevent scrolling
+
+        // Only handle touch on battle canvas
+        if (e.target.id !== 'battleCanvas') {
+            return;
+        }
+
         if (!e.touches[0]) return;
 
         const pos = this.getTouchPos(e);
@@ -201,6 +212,11 @@ class InputHandler {
      */
     onTouchEnd(e) {
         e.preventDefault();
+
+        // Only handle touch on battle canvas
+        if (e.target.id !== 'battleCanvas') {
+            return;
+        }
 
         if (!this.mouseDown || !this.dragStart) return;
 

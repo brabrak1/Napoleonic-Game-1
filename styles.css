@@ -1236,3 +1236,82 @@ body.tablet-mode .formation-option {
     padding: 16px 20px;
     font-size: 18px;
 }
+
+/* ===================================
+   MOBILE DEPLOYMENT UI OPTIMIZATION
+   =================================== */
+
+body.mobile-mode .unit-toolbar {
+    /* Tighter spacing for mobile */
+    padding: 8px 12px;
+    gap: 12px;
+    max-height: 35vh; /* Cap at 35% of viewport height */
+    overflow-y: auto; /* Allow scrolling if needed */
+}
+
+body.mobile-mode .unified-section {
+    /* Reduce padding in sections */
+    padding: 12px 15px;
+    gap: 8px;
+}
+
+body.mobile-mode .unified-section h3 {
+    /* Smaller section headers on mobile */
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+body.mobile-mode .placement-hint {
+    /* Smaller hint text */
+    font-size: 11px;
+    margin-bottom: 6px;
+}
+
+body.mobile-mode .deployment-stats {
+    /* Stack stats vertically on mobile */
+    flex-direction: column;
+    gap: 12px; /* Reduced from 30px */
+}
+
+body.mobile-mode .team-stats {
+    /* Tighter vertical spacing */
+    padding: 10px 12px;
+}
+
+body.mobile-mode .team-stats h4 {
+    /* Smaller team headers */
+    font-size: 14px; /* Reduced from 18px */
+    margin-bottom: 6px;
+}
+
+body.mobile-mode .unit-count {
+    /* Smaller unit count text */
+    font-size: 11px; /* Reduced from 14px */
+    gap: 6px;
+    margin: 4px 0; /* Reduced from 5px */
+}
+
+body.mobile-mode .unit-count .icon {
+    /* Smaller count icons */
+    font-size: 14px;
+}
+
+/* Tablet mode: slightly larger than mobile but still compact */
+body.tablet-mode .unit-toolbar {
+    max-height: 40vh; /* Slightly more space on tablets */
+    padding: 10px 15px;
+}
+
+body.tablet-mode .deployment-stats {
+    /* Keep horizontal layout on tablets if space allows */
+    flex-direction: row;
+    gap: 15px;
+}
+
+body.tablet-mode .team-stats h4 {
+    font-size: 16px;
+}
+
+body.tablet-mode .unit-count {
+    font-size: 12px;
+}
