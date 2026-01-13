@@ -27,21 +27,25 @@ class MobileHUD {
         // Mobile version label
         this.versionLabel = document.createElement('div');
         this.versionLabel.className = 'mobile-version-label';
-        this.versionLabel.textContent = window.mobileDetection?.isTablet ?
-            'IPAD VERSION' : 'MOBILE VERSION';
+        // Explicitly check for iPad
+        const isIPad = window.mobileDetection?.platform === 'iPad' ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        this.versionLabel.textContent = isIPad ? 'IPAD VERSION' : 'MOBILE VERSION';
         document.body.appendChild(this.versionLabel);
 
         // Formation button (bottom-right)
+        // Formation button (bottom-right)
         this.formationBtn = document.createElement('button');
         this.formationBtn.className = 'mobile-formation-btn';
-        this.formationBtn.innerHTML = '⚔️'; // Crossed swords emoji
+        this.formationBtn.innerHTML = '<span class="icon">⚔️</span><span class="label">Formations</span>';
         this.formationBtn.title = 'Formations';
         document.body.appendChild(this.formationBtn);
 
         // Restart button (top-right)
         this.restartBtn = document.createElement('button');
         this.restartBtn.className = 'mobile-restart-btn';
-        this.restartBtn.innerHTML = '🔄'; // Restart emoji
+        this.restartBtn.innerHTML = '<span class="icon">🔄</span><span class="label">Restart</span>';
         this.restartBtn.title = 'Restart Battle';
         document.body.appendChild(this.restartBtn);
 

@@ -962,6 +962,7 @@ body {
         height: 120px;
     }
 }
+
 /* ========================================
    MOBILE & TOUCH OPTIMIZATIONS
    ======================================== */
@@ -992,7 +993,8 @@ body.mobile-mode canvas {
 
 body.mobile-mode .game-container {
     max-width: 100vw;
-    max-height: calc(100vh - 200px); /* Leave room for HUD */
+    max-height: calc(100vh - 200px);
+    /* Leave room for HUD */
 }
 
 body.mobile-mode canvas {
@@ -1035,25 +1037,32 @@ body.mobile-mode .mobile-hud {
     display: block;
     position: fixed;
     z-index: 1900;
-    pointer-events: none; /* Buttons will have pointer-events: auto */
+    pointer-events: none;
+    /* Buttons will have pointer-events: auto */
 }
 
 /* Formation Button (Bottom-Right) */
 .mobile-formation-btn {
     position: fixed;
-    bottom: 170px; /* Above unit panel */
+    bottom: 170px;
+    /* Above unit panel */
     right: 20px;
     width: 64px;
     height: 64px;
     background: rgba(0, 0, 0, 0.85);
     color: white;
-    border: 3px solid #d4af37; /* Gold border */
-    border-radius: 50%;
+    border: 3px solid #d4af37;
+    /* Gold border */
+    border-radius: 12px;
+    /* Rounded square instead of circle to fit text better */
     font-size: 28px;
     font-weight: bold;
     display: flex;
+    flex-direction: column;
+    /* Stack icon and label */
     align-items: center;
     justify-content: center;
+    gap: 2px;
     cursor: pointer;
     pointer-events: auto;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
@@ -1078,14 +1087,18 @@ body.mobile-mode .mobile-hud {
     right: 20px;
     width: 56px;
     height: 56px;
-    background: rgba(220, 53, 69, 0.9); /* Red theme */
+    background: rgba(220, 53, 69, 0.9);
+    /* Red theme */
     color: white;
     border: 2px solid white;
     border-radius: 8px;
     font-size: 24px;
     display: flex;
+    flex-direction: column;
+    /* Stack icon and label */
     align-items: center;
     justify-content: center;
+    gap: 2px;
     cursor: pointer;
     pointer-events: auto;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
@@ -1098,11 +1111,27 @@ body.mobile-mode .mobile-hud {
     background: rgba(180, 40, 55, 1);
 }
 
+.mobile-formation-btn .icon,
+.mobile-restart-btn .icon {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.mobile-formation-btn .label,
+.mobile-restart-btn .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    font-family: sans-serif;
+    font-weight: normal;
+    letter-spacing: 0.5px;
+}
+
 /* Formation Popup Menu */
 .formation-menu {
     display: none;
     position: fixed;
-    bottom: 245px; /* Above formation button */
+    bottom: 245px;
+    /* Above formation button */
     right: 20px;
     background: rgba(0, 0, 0, 0.95);
     border: 2px solid #d4af37;

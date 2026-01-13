@@ -207,7 +207,8 @@ class GameEngine {
 
                 // Start reload (Set flag immediately to prevent multi-fire)
                 unit.isReloading = true;
-                ReloadSystem.startReload(unit, unit.reloadDuration || CONFIG.INFANTRY.RELOAD_DURATION);
+                const baseReload = CONFIG[unit.type] ? CONFIG[unit.type].RELOAD_DURATION : 15;
+                ReloadSystem.startReload(unit, baseReload);
             }
         }
 

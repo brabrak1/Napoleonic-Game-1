@@ -29,10 +29,10 @@ class InputHandler {
         this.canvas.addEventListener('mouseup', (e) => this.onMouseUp(e));
 
         // Touch events for mobile/tablet support
-        this.canvas.addEventListener('touchstart', (e) => this.onTouchStart(e));
-        this.canvas.addEventListener('touchmove', (e) => this.onTouchMove(e));
-        this.canvas.addEventListener('touchend', (e) => this.onTouchEnd(e));
-        this.canvas.addEventListener('touchcancel', (e) => this.onTouchEnd(e));
+        this.canvas.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
+        this.canvas.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
+        this.canvas.addEventListener('touchend', (e) => this.onTouchEnd(e), { passive: false });
+        this.canvas.addEventListener('touchcancel', (e) => this.onTouchEnd(e), { passive: false });
 
         // Keyboard events
         document.addEventListener('keydown', (e) => this.onKeyDown(e));
@@ -144,8 +144,12 @@ class InputHandler {
     onTouchStart(e) {
         e.preventDefault(); // Prevent scrolling
 
-        // Only handle input in battle mode (if scene manager exists)
-        if (this.sceneManager && !this.sceneManager.isBattleMode()) return;
+        // Only handle input in battle or deployment modes
+        if (this.sceneManager &&
+            !this.sceneManager.isBattleMode() &&
+            !this.sceneManager.isDeploymentMode()) {
+            return; // Block only in start scene
+        }
 
         const pos = this.getTouchPos(e);
         this.mouseDown = true;
