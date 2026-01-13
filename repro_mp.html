@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MP Repro</title>
+</head>
+
+<body>
+    <h1>MP Repro</h1>
+    <div id="logs"></div>
+
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="js/multiplayer/RoomCodeGenerator.js"></script>
+    <script src="js/multiplayer/PeerConnection.js"></script>
+
+    <script>
+        function log(msg) {
+            const div = document.getElementById('logs');
+            div.innerHTML += msg + '<br>';
+            console.log(msg);
+        }
+
+        window.onerror = function (msg, url, line) {
+            log(`ERROR: ${msg} (${url}:${line})`);
+        };
+
+        log('Starting Repro...');
+
+        try {
+            const generator = new RoomCodeGenerator();
+            const code = generator.generate();
+            log(`Generated Code: ${code}`);
+
+            log('Initializing Peer...');
+            const peer = new Peer(code, {
+                debug: 3,
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:global.stun.twilio.com:3478' }
+                    ]
+                }
+            });
+
+            peer.on('open', (id) => {
+                log(`Peer Opened with ID: ${id}`);
+            });
+
+            peer.on('error', (err) => {
+                log(`Peer Error: ${err.type} - ${err}`);
+            });
+
+            peer.on('disconnected', () => {
+                log('Peer Disconnected');
+            });
+
+        } catch (e) {
+            log(`EXCEPTION: ${e}`);
+        }
+    </script>
+</body>
+
+</html>

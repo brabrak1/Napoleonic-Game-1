@@ -36,6 +36,10 @@ class MultiplayerManager {
             console.log(`[MP] Peer opened: ${peerId}`);
             if (this.isHost) {
                 this.ui.showHostMode(peerId);
+                // Fix: Wait for connection to open before transitioning to avoid interrupting handshake
+                if (this.sceneManager) {
+                    this.sceneManager.transitionTo('deployment');
+                }
             }
         };
 

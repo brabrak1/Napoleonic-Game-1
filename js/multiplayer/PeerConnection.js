@@ -39,6 +39,7 @@ class PeerConnection {
         console.log(`[P2P] Generated Room Code: ${customId}`);
 
         this.peer = new Peer(customId, {
+            debug: 0,
             config: {
                 iceServers: [
                     { urls: 'stun:stun.l.google.com:19302' },

@@ -40,7 +40,6 @@ class SceneManager {
             this.mpHostButton.addEventListener('click', () => {
                 if (window.multiplayerManager) {
                     window.multiplayerManager.hostGame();
-                    this.transitionTo('deployment');
                 }
             });
         }
