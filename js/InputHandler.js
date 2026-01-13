@@ -260,6 +260,14 @@ class InputHandler {
         } else if (e.key === 'r' || e.key === 'R' || e.code === 'KeyR') {
             // Restart game
             if (this.game.gameOver) {
+                // Multiplayer Restart Sync
+                if (window.multiplayerManager && window.multiplayerManager.isActive()) {
+                    window.multiplayerManager.restartGame();
+                    // Local restart happens below or via sync? 
+                    // Better to do it immediately locally + send msg, OR confirm msg?
+                    // Let's do it immediately locally effectively assuming trust.
+                }
+
                 try {
                     // Transition to deployment scene (which calls game.restart())
                     if (this.sceneManager) {

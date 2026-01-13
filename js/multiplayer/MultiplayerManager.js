@@ -197,9 +197,55 @@ class MultiplayerManager {
                 }
                 break;
 
+            case 'RESTART':
+                // Opponent requested restart
+                console.log('[MP] Restart requested by peer');
+                this.ui.showToast('Game Restarted by Peer');
+                if (this.sceneManager) {
+                    this.sceneManager.transitionTo('deployment');
+                } else {
+                    this.game.restart();
+                }
+                break;
+
+            case 'SYNC_SETTINGS':
+                // Host sent new settings
+                console.log('[MP] Settings received from Host');
+                if (this.game.settingsPanel) {
+                    this.game.settingsPanel.applyRemoteSettings(data.settings);
+                } else if (window.game && window.game.settingsPanel) {
+                    // Fallback access
+                    window.game.settingsPanel.applyRemoteSettings(data.settings);
+                }
+                this.ui.showToast('Host updated game settings');
+                break;
+
             default:
                 console.warn(`[MP] Unknown data type: ${data.type}`);
         }
+    }
+
+    /**
+     * Broadcast restart command
+     */
+    restartGame() {
+        if (!this.isActive()) return;
+        this.peerConnection.send({
+            type: 'RESTART',
+            timestamp: Date.now()
+        });
+    }
+
+    /**
+     * Broadcast settings sync
+     */
+    syncSettings(settings) {
+        if (!this.isActive()) return;
+        this.peerConnection.send({
+            type: 'SYNC_SETTINGS',
+            settings: settings,
+            timestamp: Date.now()
+        });
     }
 
     /**

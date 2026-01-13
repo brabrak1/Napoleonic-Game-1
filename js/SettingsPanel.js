@@ -103,41 +103,135 @@ class SettingsPanel {
      * Apply settings and restart game
      */
     applySettings() {
-        // Update config
-        CONFIG.INFANTRY.RELOAD_DURATION = parseFloat(document.getElementById('reloadDuration').value);
-        CONFIG.INFANTRY.BASE_DAMAGE = parseInt(document.getElementById('infantryDamage').value);
-        CONFIG.INFANTRY.FIRE_RANGE = parseInt(document.getElementById('fireRange').value);
-        CONFIG.CANNON.RELOAD_DURATION = parseFloat(document.getElementById('cannonReload').value);
-        CONFIG.CANNON.RELOAD_DURATION = parseFloat(document.getElementById('cannonReload').value);
-        CONFIG.CANNON.BASE_DAMAGE = parseInt(document.getElementById('cannonDamage').value);
-        CONFIG.CANNON.FIRE_RANGE = parseInt(document.getElementById('cannonRange').value);
-        CONFIG.CAVALRY.CHARGE_MULTIPLIER = parseFloat(document.getElementById('chargeMultiplier').value);
+        const settings = this.gatherSettings();
 
-        // Safety: Clamp unit counts to prevent freeze/crash
-        // Max 100 infantry per side, 50 cavalry
-        CONFIG.RED_INFANTRY = Math.min(100, Math.max(0, parseInt(document.getElementById('redInfantry').value) || 0));
-        CONFIG.RED_CAVALRY = Math.min(50, Math.max(0, parseInt(document.getElementById('redCavalry').value) || 0));
-        CONFIG.BLUE_INFANTRY = Math.min(100, Math.max(0, parseInt(document.getElementById('blueInfantry').value) || 0));
-        CONFIG.BLUE_CAVALRY = Math.min(50, Math.max(0, parseInt(document.getElementById('blueCavalry').value) || 0));
-
-        // Update input fields to show clamped values
-        document.getElementById('redInfantry').value = CONFIG.RED_INFANTRY;
-        document.getElementById('redCavalry').value = CONFIG.RED_CAVALRY;
-        document.getElementById('blueInfantry').value = CONFIG.BLUE_INFANTRY;
-        document.getElementById('blueCavalry').value = CONFIG.BLUE_CAVALRY;
-
-        console.log("Applying Settings & Restarting...");
-
-        // Restart game to apply new settings
-        // Restart game to apply new settings
-        if (this.sceneManager) {
-            this.sceneManager.transitionTo('deployment');
-        } else if (this.game) {
-            // Fallback if no scene manager (shouldn't happen)
-            this.game.restart();
+        // Multiplayer Sync (Host Auth)
+        if (window.multiplayerManager && window.multiplayerManager.isActive()) {
+            if (window.multiplayerManager.isHost) {
+                window.multiplayerManager.syncSettings(settings); // Host broadcasts
+                this.applyLocalSettings(settings); // Apply locally
+            } else {
+                // Guest tries to apply settings? For now, let's allow it but warn or sync back?
+                // Ideally Guest shouldn't, but let's allow updating local + asking host?
+                // Simplest: Behave as local, but send sync (Host will ignore or overwritten?)
+                // Let's assume Host-only broadcast. Guest changes are local-only (desync risk if game logic depends)
+                // BUT user asked for "settings feature available... for multiplayer".
+                // I'll apply locally and sync.
+                window.multiplayerManager.syncSettings(settings); // Allow guest to broadcast too?
+                this.applyLocalSettings(settings);
+            }
+        } else {
+            this.applyLocalSettings(settings);
         }
 
         // Close the panel
         this.toggle();
+    }
+
+    /**
+     * Gather settings from UI
+     */
+    gatherSettings() {
+        return {
+            reloadDuration: parseFloat(document.getElementById('reloadDuration').value),
+            infantryDamage: parseInt(document.getElementById('infantryDamage').value),
+            fireRange: parseInt(document.getElementById('fireRange').value),
+            cannonReload: parseFloat(document.getElementById('cannonReload').value),
+            cannonDamage: parseInt(document.getElementById('cannonDamage').value),
+            cannonRange: parseInt(document.getElementById('cannonRange').value),
+            chargeMultiplier: parseFloat(document.getElementById('chargeMultiplier').value),
+            redInfantry: Math.min(100, Math.max(0, parseInt(document.getElementById('redInfantry').value) || 0)),
+            redCavalry: Math.min(50, Math.max(0, parseInt(document.getElementById('redCavalry').value) || 0)),
+            blueInfantry: Math.min(100, Math.max(0, parseInt(document.getElementById('blueInfantry').value) || 0)),
+            blueCavalry: Math.min(50, Math.max(0, parseInt(document.getElementById('blueCavalry').value) || 0)),
+            mapSize: document.getElementById('mapSize').value // New Map Size
+        };
+    }
+
+    /**
+     * Apply settings locally
+     */
+    applyLocalSettings(settings) {
+        // Update config
+        CONFIG.INFANTRY.RELOAD_DURATION = settings.reloadDuration;
+        CONFIG.INFANTRY.BASE_DAMAGE = settings.infantryDamage;
+        CONFIG.INFANTRY.FIRE_RANGE = settings.fireRange;
+        CONFIG.CANNON.RELOAD_DURATION = settings.cannonReload;
+        CONFIG.CANNON.BASE_DAMAGE = settings.cannonDamage;
+        CONFIG.CANNON.FIRE_RANGE = settings.cannonRange;
+        CONFIG.CAVALRY.CHARGE_MULTIPLIER = settings.chargeMultiplier;
+
+        CONFIG.RED_INFANTRY = settings.redInfantry;
+        CONFIG.RED_CAVALRY = settings.redCavalry;
+        CONFIG.BLUE_INFANTRY = settings.blueInfantry;
+        CONFIG.BLUE_CAVALRY = settings.blueCavalry;
+
+        // Apply Map Size
+        this.applyMapSize(settings.mapSize);
+
+        // Update UI inputs (clamp/sync check)
+        document.getElementById('reloadDuration').value = settings.reloadDuration;
+        // ... (Others if needed, but they come from UI so should match)
+
+        console.log("Applying Settings & Restarting...", settings);
+
+        // Restart game to apply new settings
+        if (this.sceneManager) {
+            this.sceneManager.transitionTo('deployment');
+        } else if (this.game) {
+            this.game.restart();
+        }
+    }
+
+    /**
+     * Apply remote settings (from Host)
+     */
+    applyRemoteSettings(settings) {
+        // Update UI to match Host
+        document.getElementById('reloadDuration').value = settings.reloadDuration;
+        document.getElementById('infantryDamage').value = settings.infantryDamage;
+        document.getElementById('fireRange').value = settings.fireRange;
+        document.getElementById('cannonReload').value = settings.cannonReload;
+        document.getElementById('cannonDamage').value = settings.cannonDamage;
+        document.getElementById('cannonRange').value = settings.cannonRange;
+        document.getElementById('chargeMultiplier').value = settings.chargeMultiplier;
+        document.getElementById('redInfantry').value = settings.redInfantry;
+        document.getElementById('redCavalry').value = settings.redCavalry;
+        document.getElementById('blueInfantry').value = settings.blueInfantry;
+        document.getElementById('blueCavalry').value = settings.blueCavalry;
+        document.getElementById('mapSize').value = settings.mapSize;
+
+        this.applyLocalSettings(settings);
+    }
+
+    /**
+     * Apply Map Size logic
+     */
+    applyMapSize(size) {
+        let width = 1200;
+        let height = 800;
+
+        switch (size) {
+            case 'SMALL': width = 800; height = 600; break;
+            case 'MEDIUM': width = 1200; height = 800; break;
+            case 'LARGE': width = 1600; height = 1200; break;
+            case 'XLARGE': width = 2000; height = 1600; break;
+        }
+
+        CONFIG.CANVAS_WIDTH = width;
+        CONFIG.CANVAS_HEIGHT = height;
+
+        // Resize Canvases
+        const gameCanvas = document.getElementById('gameCanvas');
+        const battleCanvas = document.getElementById('battleCanvas');
+
+        if (gameCanvas) {
+            gameCanvas.width = width;
+            gameCanvas.height = height;
+        }
+        if (battleCanvas) {
+            battleCanvas.width = width;
+            battleCanvas.height = height;
+        }
     }
 }
