@@ -143,10 +143,18 @@ class InputHandler {
      */
     onTouchStart(e) {
         e.preventDefault(); // Prevent scrolling
+
+        // Only handle input in battle mode (if scene manager exists)
+        if (this.sceneManager && !this.sceneManager.isBattleMode()) return;
+
         const pos = this.getTouchPos(e);
         this.mouseDown = true;
         this.dragStart = pos;
         this.currentMouse = pos;
+
+        // MOBILE ENHANCEMENT: Track touch start time for tap detection
+        this.touchStartTime = Date.now();
+        this.touchMoved = false;
 
         // Same logic as mouse: select unit or prepare for selection box
         const selectedUnit = this.game.selectUnitAtPosition(pos.x, pos.y, this.playerTeam);
@@ -168,6 +176,15 @@ class InputHandler {
         const pos = this.getTouchPos(e);
         this.currentMouse = pos;
 
+        // MOBILE ENHANCEMENT: Track if touch moved significantly
+        if (this.dragStart) {
+            const dx = Math.abs(pos.x - this.dragStart.x);
+            const dy = Math.abs(pos.y - this.dragStart.y);
+            if (dx > 5 || dy > 5) {
+                this.touchMoved = true;
+            }
+        }
+
         if (this.mouseDown && this.game.selectedUnits.length > 0) {
             // Units selected: show movement preview arrow
             this.renderer.setMovementTarget(pos.x, pos.y);
@@ -180,13 +197,33 @@ class InputHandler {
      */
     onTouchEnd(e) {
         e.preventDefault();
-        const pos = this.getTouchPos(e);
 
-        // Same logic as mouseup
-        if (this.dragStart) {
-            const dx = Math.abs(pos.x - this.dragStart.x);
-            const dy = Math.abs(pos.y - this.dragStart.y);
+        if (!this.mouseDown || !this.dragStart) return;
 
+        const pos = this.currentMouse || this.dragStart;
+        const dx = Math.abs(pos.x - this.dragStart.x);
+        const dy = Math.abs(pos.y - this.dragStart.y);
+
+        // MOBILE ENHANCEMENT: Detect tap vs drag
+        const touchDuration = Date.now() - (this.touchStartTime || 0);
+        const wasTap = !this.touchMoved && touchDuration < 300; // 300ms tap threshold
+
+        if (wasTap) {
+            // TAP DETECTED - Special mobile logic
+            const tappedUnit = this.game.selectUnitAtPosition(pos.x, pos.y, this.playerTeam);
+
+            if (!tappedUnit && this.game.selectedUnits.length > 0) {
+                // TAP-TO-MOVE: Selected units + tap empty area = move there
+                console.log('[Mobile] Tap-to-move triggered');
+                this.game.moveSelectedUnits(pos.x, pos.y);
+                this.renderer.clearMovementTarget();
+            } else if (!tappedUnit && this.game.selectedUnits.length === 0) {
+                // TAP-TO-DESELECT: No selection + tap empty = clear (already handled)
+                console.log('[Mobile] Tap-to-deselect triggered');
+            }
+            // If tappedUnit exists, it's already selected by selectUnitAtPosition
+        } else {
+            // DRAG DETECTED - Existing desktop logic
             if (this.game.selectedUnits.length > 0) {
                 // Units were selected: move them to tap/drag endpoint
                 this.game.moveSelectedUnits(pos.x, pos.y);
@@ -203,8 +240,11 @@ class InputHandler {
             }
         }
 
+        // Reset state
         this.mouseDown = false;
         this.dragStart = null;
+        this.touchStartTime = null;
+        this.touchMoved = false;
     }
 
     /**

@@ -124,6 +124,11 @@ class SceneManager {
                 }
                 break;
         }
+
+        // Update mobile HUD visibility based on scene
+        if (window.mobileHUD) {
+            window.mobileHUD.updateVisibility();
+        }
     }
 
     /**

@@ -2,6 +2,12 @@
 
 class NapoleonicWargame {
     constructor() {
+        // Detect mobile/tablet devices first
+        this.mobileDetection = MobileDetector.applyMobileClass();
+        window.isMobile = this.mobileDetection.isMobile;
+        window.mobileDetection = this.mobileDetection;
+        console.log(`[Mobile] Platform detected: ${this.mobileDetection.platform}, Mobile: ${this.mobileDetection.isMobile}`);
+
         // Get canvases
         this.canvas = document.getElementById('gameCanvas');
         this.battleCanvas = document.getElementById('battleCanvas');
@@ -40,8 +46,12 @@ class NapoleonicWargame {
             this.deploymentManager
         );
 
+        // Initialize Mobile HUD (only creates elements if mobile detected)
+        this.mobileHUD = new MobileHUD(this.game, this.sceneManager);
+
         // Expose globally for quick access
         window.multiplayerManager = this.multiplayerManager;
+        window.mobileHUD = this.mobileHUD;
 
         // Set game references in scene manager
         this.sceneManager.setGameReferences(this.game, this.deploymentManager, this.renderer, this.battleRenderer);

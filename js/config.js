@@ -19,7 +19,7 @@ const CONFIG = {
         COLLISION_RADIUS: 12,   // pixels
         BASE_DAMAGE: 35,        // per volley (musket)
         MELEE_DAMAGE: 0.15,     // per melee frame (approx 9-10 dmg/sec)
-        FIRE_RANGE: 250,        // pixels (Expanded from 150)
+        FIRE_RANGE: 400,        // pixels (Increased from 250 for grander scale)
         RELOAD_DURATION: 15,    // seconds
         SIZE: 20,               // rectangle size
     },

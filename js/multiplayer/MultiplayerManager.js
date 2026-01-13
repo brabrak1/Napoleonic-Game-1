@@ -67,7 +67,7 @@ class MultiplayerManager {
         // Join button
         if (this.ui.joinBtn) {
             this.ui.joinBtn.addEventListener('click', () => {
-                const roomCode = this.ui.joinCodeInput.value.trim();
+                const roomCode = this.ui.joinCodeInput.value.trim().toLowerCase();
                 if (!roomCode) {
                     this.ui.showToast('Please enter a room code', true);
                     return;

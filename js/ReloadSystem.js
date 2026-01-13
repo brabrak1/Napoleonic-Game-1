@@ -19,7 +19,15 @@ class ReloadSystem {
         const exhaustionPenalty = unit.reloadMultiplier || 1.0;
 
         // Calculate effective reload duration
-        const baseDuration = reloadDuration !== null ? reloadDuration : unit.reloadDuration;
+        let baseDuration = reloadDuration !== null ? reloadDuration : unit.reloadDuration;
+
+        // "Battlefield Heroism": 10% chance to reload 2x faster (0.5x duration)
+        // Creates pockets of intense fire on the line
+        if (Math.random() < 0.1) {
+            baseDuration *= 0.5;
+            // Optional: Visual/Audio cue could be added here if needed
+        }
+
         unit.reloadDuration = baseDuration * formationModifier * exhaustionPenalty;
     }
 

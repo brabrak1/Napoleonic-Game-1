@@ -33,7 +33,12 @@ class PeerConnection {
         console.log('[P2P] Initializing as HOST...');
         this.isHost = true;
 
-        this.peer = new Peer({
+        // Generate custom word-based ID
+        const codeGenerator = new RoomCodeGenerator();
+        const customId = codeGenerator.generate();
+        console.log(`[P2P] Generated Room Code: ${customId}`);
+
+        this.peer = new Peer(customId, {
             config: {
                 iceServers: [
                     { urls: 'stun:stun.l.google.com:19302' },
@@ -55,6 +60,13 @@ class PeerConnection {
 
         this.peer.on('error', (err) => {
             console.error('[P2P] PeerJS Error:', err);
+            // Retry on "ID taken" error (unavailable-id)
+            if (err.type === 'unavailable-id') {
+                console.warn('[P2P] ID collision, retrying with new code...');
+                if (this.peer) this.peer.destroy();
+                this.initializeAsHost(); // Recursive retry
+                return;
+            }
             if (this.onError) this.onError(err);
         });
     }
