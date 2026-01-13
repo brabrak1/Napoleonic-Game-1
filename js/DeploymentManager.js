@@ -122,7 +122,7 @@ class DeploymentManager {
     isInDeploymentZone(x) {
         const deploymentWidth = CONFIG.CANVAS_WIDTH * 0.25;
         return (x >= 0 && x <= deploymentWidth) ||
-               (x >= (CONFIG.CANVAS_WIDTH - deploymentWidth) && x <= CONFIG.CANVAS_WIDTH);
+            (x >= (CONFIG.CANVAS_WIDTH - deploymentWidth) && x <= CONFIG.CANVAS_WIDTH);
     }
 
     /**
@@ -210,7 +210,7 @@ class DeploymentManager {
         if (this.selectedUnitType === 'INFANTRY') {
             // Rectangle + rifle
             ctx.fillStyle = color;
-            ctx.fillRect(-size/2, -size/2, size, size);
+            ctx.fillRect(-size / 2, -size / 2, size, size);
             ctx.strokeStyle = '#5D4037';
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -220,14 +220,14 @@ class DeploymentManager {
         } else if (this.selectedUnitType === 'CAVALRY') {
             // Rectangle + X
             ctx.fillStyle = color;
-            ctx.fillRect(-size/2, -size/2, size, size);
+            ctx.fillRect(-size / 2, -size / 2, size, size);
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(-size/2+2, -size/2+2);
-            ctx.lineTo(size/2-2, size/2-2);
-            ctx.moveTo(size/2-2, -size/2+2);
-            ctx.lineTo(-size/2+2, size/2-2);
+            ctx.moveTo(-size / 2 + 2, -size / 2 + 2);
+            ctx.lineTo(size / 2 - 2, size / 2 - 2);
+            ctx.moveTo(size / 2 - 2, -size / 2 + 2);
+            ctx.lineTo(-size / 2 + 2, size / 2 - 2);
             ctx.stroke();
         } else if (this.selectedUnitType === 'CANNON') {
             // Barrel + wheels
@@ -236,13 +236,13 @@ class DeploymentManager {
             const wheelRadius = size * 0.3;
 
             ctx.fillStyle = '#1a1a1a';
-            ctx.fillRect(0, -barrelWidth/2, barrelLength, barrelWidth);
+            ctx.fillRect(0, -barrelWidth / 2, barrelLength, barrelWidth);
             ctx.fillStyle = color;
-            ctx.fillRect(-size/3, -size/2, size/1.5, size);
+            ctx.fillRect(-size / 3, -size / 2, size / 1.5, size);
             ctx.fillStyle = '#5D4037';
             ctx.beginPath();
-            ctx.arc(-size/4, -size/2-2, wheelRadius, 0, Math.PI*2);
-            ctx.arc(-size/4, size/2+2, wheelRadius, 0, Math.PI*2);
+            ctx.arc(-size / 4, -size / 2 - 2, wheelRadius, 0, Math.PI * 2);
+            ctx.arc(-size / 4, size / 2 + 2, wheelRadius, 0, Math.PI * 2);
             ctx.fill();
         }
 
@@ -255,6 +255,10 @@ class DeploymentManager {
     enable() {
         this.canvas.addEventListener('click', this.canvasClickHandler);
         this.canvas.addEventListener('mousemove', this.canvasMouseMoveHandler);
+        // Added Touch Support
+        this.canvasTouchHandler = (e) => this.handleCanvasTouch(e);
+        this.canvas.addEventListener('touchstart', this.canvasTouchHandler, { passive: false });
+
         this.canvas.style.cursor = 'pointer';
     }
 
@@ -264,7 +268,29 @@ class DeploymentManager {
     disable() {
         this.canvas.removeEventListener('click', this.canvasClickHandler);
         this.canvas.removeEventListener('mousemove', this.canvasMouseMoveHandler);
+        // Remove Touch Support
+        if (this.canvasTouchHandler) {
+            this.canvas.removeEventListener('touchstart', this.canvasTouchHandler);
+            this.canvasTouchHandler = null;
+        }
+
         this.canvas.style.cursor = 'crosshair';
+    }
+
+    /**
+     * Handle touch event (adapter for click handler)
+     */
+    handleCanvasTouch(e) {
+        if (e.cancelable) e.preventDefault();
+
+        // Convert touch to click-like object
+        const touch = e.changedTouches[0];
+        const mockClickEvent = {
+            clientX: touch.clientX,
+            clientY: touch.clientY
+        };
+
+        this.handleCanvasClick(mockClickEvent);
     }
 
     /**

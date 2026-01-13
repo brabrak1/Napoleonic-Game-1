@@ -491,6 +491,8 @@ body {
     display: flex;
     gap: 15px;
     justify-content: center;
+    flex-wrap: wrap;
+    /* Allow wrapping on small screens */
 }
 
 .unit-spawn-btn {
@@ -960,6 +962,39 @@ body {
 
     .unit-panel-container {
         height: 120px;
+    }
+
+    .unit-panel-container {
+        height: 120px;
+    }
+}
+
+/* iPad Portrait Optimization (768px - 1024px width) */
+@media (max-width: 1024px) {
+    .unit-spawn-btn {
+        padding: 5px;
+        min-width: 60px;
+        max-width: 80px;
+    }
+
+    .unit-spawn-btn .unit-icon {
+        font-size: 20px;
+    }
+
+    .unit-spawn-btn .unit-label {
+        font-size: 10px;
+        letter-spacing: 0;
+    }
+
+    .unit-toolbar {
+        padding: 10px 15px;
+        gap: 10px;
+    }
+
+    .settings-panel {
+        width: 80%;
+        left: 50%;
+        transform: translateX(-50%);
     }
 }
 
