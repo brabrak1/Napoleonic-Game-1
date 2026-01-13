@@ -1359,3 +1359,95 @@ body.tablet-mode .team-stats h4 {
 body.tablet-mode .unit-count {
     font-size: 12px;
 }
+
+/* Mobile / iPad Specific Overrides - ENFORCED */
+@media (max-width: 1024px) {
+    .deployment-header {
+        top: 15px;
+        padding: 5px 15px;
+        width: 95%;
+        border: 1px solid #8b5a2b;
+    }
+
+    .deployment-header h2 {
+        font-size: 20px;
+        margin-bottom: 2px;
+    }
+
+    .deployment-header p {
+        display: none;
+        /* Hide subtitle to save space */
+    }
+
+    .unit-toolbar {
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.98);
+        gap: 8px;
+        max-height: 40vh;
+        /* Ensure we don't cover too much */
+        overflow-y: auto;
+    }
+
+    .toolbar-section h3 {
+        display: none;
+        /* Hide titles */
+    }
+
+    .placement-hint {
+        display: none;
+    }
+
+    /* Hide the stats panel completely as we now have badges on buttons */
+    .deployment-stats {
+        display: none !important;
+    }
+
+    .unit-buttons {
+        gap: 8px;
+    }
+
+    .unit-spawn-btn {
+        padding: 8px;
+        flex-direction: column;
+        /* Stack icon and label/count */
+        min-width: 70px;
+    }
+
+    .unit-spawn-btn .unit-icon {
+        font-size: 20px;
+    }
+
+    .unit-spawn-btn .unit-label {
+        font-size: 10px;
+        margin-bottom: 2px;
+    }
+
+    /* Unit Count Badge on Button */
+    .unit-count-badge {
+        display: block;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 4px;
+        padding: 2px 4px;
+        font-size: 10px;
+        color: #ffeb3b;
+        border: 1px solid #666;
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Start Battle Button optimization */
+    .start-battle-button {
+        padding: 8px 25px;
+        font-size: 16px;
+        margin-top: 5px;
+    }
+}
+
+/* Base style for the badge */
+.unit-count-badge {
+    font-size: 11px;
+    color: #ffd700;
+    margin-top: 4px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}

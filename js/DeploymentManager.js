@@ -19,11 +19,23 @@ class DeploymentManager {
         // Canvas handlers
         this.canvasClickHandler = (e) => this.handleCanvasClick(e);
         this.canvasMouseMoveHandler = (e) => this.handleCanvasMouseMove(e);
+        this.canvasMouseDownHandler = (e) => this.handleCanvasMouseDown(e);
+        this.canvasMouseUpHandler = (e) => this.handleCanvasMouseUp(e);
 
         // Preview state
         this.previewX = null;
         this.previewY = null;
         this.previewTeam = null;
+
+        // Drag-to-deploy state (desktop only)
+        this.isDragging = false;
+        this.dragStartX = null;
+        this.dragStartY = null;
+        this.dragCurrentX = null;
+        this.dragCurrentY = null;
+        this.suppressNextClick = false;
+        this.UNIT_SPACING = 40; // pixels between units
+        this.MIN_DRAG_DISTANCE = 50; // minimum drag to trigger multi-unit
 
         // UI elements
         this.unitButtons = document.querySelectorAll('.unit-spawn-btn');
@@ -89,23 +101,39 @@ class DeploymentManager {
      * Handle canvas click to place unit
      */
     handleCanvasClick(e) {
-        if (!this.selectedUnitType) return;
+        // Suppress click if it's part of a drag operation
+        if (this.suppressNextClick) {
+            this.suppressNextClick = false;
+            return;
+        }
 
         const rect = this.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
+        this.placeUnitAt(x, y);
+    }
+
+    /**
+     * Place a single unit at the given position
+     * @param {number} x - Canvas x coordinate
+     * @param {number} y - Canvas y coordinate
+     * @returns {boolean} - True if unit was placed successfully
+     */
+    placeUnitAt(x, y) {
+        if (!this.selectedUnitType) return false;
+
         // Auto-determine team from position
         const team = this.determineTeamFromPosition(x);
-        if (!team) return; // Outside deployment zones
+        if (!team) return false; // Outside deployment zones
 
         // Validate player team restriction (multiplayer)
         if (this.playerTeam && team !== this.playerTeam) {
             console.warn(`[Deployment] Cannot place units on ${team} side. You are ${this.playerTeam}.`);
-            return; // Player not allowed to place on this side
+            return false;
         }
 
-        // Create unit at clicked position
+        // Create unit at position
         const unit = this.game.createUnit(this.selectedUnitType, team, x, y);
 
         // Set initial facing direction
@@ -114,6 +142,97 @@ class DeploymentManager {
         // Update deployed count
         this.deployedUnits[team][this.selectedUnitType]++;
         this.updateUnitCount(team, this.selectedUnitType);
+
+        return true;
+    }
+
+    /**
+     * Handle mouse down for drag-to-deploy (desktop only)
+     * @param {MouseEvent} e - Mouse event
+     */
+    handleCanvasMouseDown(e) {
+        if (!this.selectedUnitType) return;
+
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Check if in valid deployment zone
+        if (!this.isInDeploymentZone(x)) return;
+
+        // Start drag
+        this.isDragging = true;
+        this.dragStartX = x;
+        this.dragStartY = y;
+        this.dragCurrentX = x;
+        this.dragCurrentY = y;
+
+        console.log('[Deployment] Drag started at', x, y);
+    }
+
+    /**
+     * Handle mouse up for drag-to-deploy (desktop only)
+     * @param {MouseEvent} e - Mouse event
+     */
+    handleCanvasMouseUp(e) {
+        if (!this.isDragging) return;
+
+        const rect = this.canvas.getBoundingClientRect();
+        const endX = e.clientX - rect.left;
+        const endY = e.clientY - rect.top;
+
+        // Calculate drag distance
+        const dx = endX - this.dragStartX;
+        const dy = endY - this.dragStartY;
+        const dragDistance = Math.sqrt(dx * dx + dy * dy);
+
+        console.log('[Deployment] Drag ended, distance:', dragDistance);
+
+        if (dragDistance < this.MIN_DRAG_DISTANCE) {
+            // SHORT DRAG: Place single unit (like a click)
+            this.placeUnitAt(this.dragStartX, this.dragStartY);
+        } else {
+            // LONG DRAG: Place multiple units along line
+            const numUnits = Math.max(2, Math.floor(dragDistance / this.UNIT_SPACING));
+            this.placeUnitsAlongLine(this.dragStartX, this.dragStartY, endX, endY, numUnits);
+
+            // Suppress the click event that will follow
+            this.suppressNextClick = true;
+        }
+
+        // Reset drag state
+        this.isDragging = false;
+        this.dragStartX = null;
+        this.dragStartY = null;
+        this.dragCurrentX = null;
+        this.dragCurrentY = null;
+    }
+
+    /**
+     * Place multiple units evenly spaced along a line
+     * @param {number} startX - Start x coordinate
+     * @param {number} startY - Start y coordinate
+     * @param {number} endX - End x coordinate
+     * @param {number} endY - End y coordinate
+     * @param {number} numUnits - Number of units to place
+     */
+    placeUnitsAlongLine(startX, startY, endX, endY, numUnits) {
+        console.log(`[Deployment] Placing ${numUnits} units in a line`);
+
+        let placedCount = 0;
+
+        for (let i = 0; i < numUnits; i++) {
+            // Interpolate position along line
+            const t = numUnits === 1 ? 0 : i / (numUnits - 1); // Handle single unit edge case
+            const x = startX + t * (endX - startX);
+            const y = startY + t * (endY - startY);
+
+            // Place unit (validates team, zone, multiplayer restrictions)
+            const placed = this.placeUnitAt(x, y);
+            if (placed) placedCount++;
+        }
+
+        console.log(`[Deployment] Successfully placed ${placedCount}/${numUnits} units`);
     }
 
     /**
@@ -134,6 +253,26 @@ class DeploymentManager {
 
         if (element) {
             element.textContent = `${type}: ${current}`;
+        }
+
+        // Update button badge (Unified UI)
+        // Note: This updates the shared buttons at the bottom.
+        // In a hotseat game, we might want to visualize whose turn it is,
+        // but currently buttons are shared. We show total or relevant?
+        // Let's show the count for the CURRENTLY deploying team if we can,
+        // or just the generic count.
+        // Actually, best to just show the count for the team that owns the button context.
+        // But since buttons are unified, we should probably update them based on the LAST interaction
+        // or just update them to match the team we just added to?
+        // Let's just update the badge on the button matching the type.
+        const btn = document.querySelector(`.unit-spawn-btn[data-type="${type}"] .unit-count-badge`);
+        if (btn) {
+            // We might want to show "Red: X | Blue: Y" or just the current count.
+            // For simplicity on mobile, let's just show the Total or the count of the last modified team?
+            // The user experience requested is simple. Let's show "R:X B:Y"
+            const redCount = this.deployedUnits['RED'][type];
+            const blueCount = this.deployedUnits['BLUE'][type];
+            btn.textContent = `R:${redCount} B:${blueCount}`;
         }
     }
 
@@ -164,16 +303,24 @@ class DeploymentManager {
      * Handle canvas mouse move for preview
      */
     handleCanvasMouseMove(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // DRAG-TO-DEPLOY: Update drag end position if dragging
+        if (this.isDragging) {
+            this.dragCurrentX = x;
+            this.dragCurrentY = y;
+            // Preview will be rendered in renderPreview()
+            return; // Skip normal preview when dragging
+        }
+
         if (!this.selectedUnitType) {
             this.previewX = null;
             this.previewY = null;
             this.previewTeam = null;
             return;
         }
-
-        const rect = this.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
 
         const team = this.determineTeamFromPosition(x);
 
@@ -193,6 +340,57 @@ class DeploymentManager {
      * Render unit placement preview
      */
     renderPreview(ctx) {
+        // DRAG PREVIEW: Show line and unit positions during drag
+        if (this.isDragging && this.dragStartX !== null && this.dragCurrentX !== null) {
+            const dx = this.dragCurrentX - this.dragStartX;
+            const dy = this.dragCurrentY - this.dragStartY;
+            const dragDistance = Math.sqrt(dx * dx + dy * dy);
+
+            if (dragDistance >= this.MIN_DRAG_DISTANCE) {
+                // Calculate how many units will be placed
+                const numUnits = Math.max(2, Math.floor(dragDistance / this.UNIT_SPACING));
+
+                ctx.save();
+
+                // Draw line from start to current
+                ctx.strokeStyle = '#FFD700'; // Gold color
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(this.dragStartX, this.dragStartY);
+                ctx.lineTo(this.dragCurrentX, this.dragCurrentY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Draw circles at unit placement positions
+                const team = this.determineTeamFromPosition(this.dragStartX);
+                const color = team === 'RED' ? CONFIG.COLORS.RED_TEAM : CONFIG.COLORS.BLUE_TEAM;
+
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 0.5;
+
+                for (let i = 0; i < numUnits; i++) {
+                    const t = numUnits === 1 ? 0 : i / (numUnits - 1);
+                    const x = this.dragStartX + t * (this.dragCurrentX - this.dragStartX);
+                    const y = this.dragStartY + t * (this.dragCurrentY - this.dragStartY);
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Draw unit count text
+                ctx.globalAlpha = 1.0;
+                ctx.fillStyle = '#FFD700';
+                ctx.font = 'bold 16px Arial';
+                ctx.fillText(`${numUnits} units`, this.dragCurrentX + 15, this.dragCurrentY - 15);
+
+                ctx.restore();
+                return; // Skip normal preview when dragging
+            }
+        }
+
+        // EXISTING HOVER PREVIEW
         if (!this.previewX || !this.previewY || !this.previewTeam || !this.selectedUnitType) {
             return;
         }
@@ -255,11 +453,20 @@ class DeploymentManager {
     enable() {
         this.canvas.addEventListener('click', this.canvasClickHandler);
         this.canvas.addEventListener('mousemove', this.canvasMouseMoveHandler);
-        // Added Touch Support
+
+        // DESKTOP ONLY: Drag-to-deploy
+        if (!window.isMobile) {
+            this.canvas.addEventListener('mousedown', this.canvasMouseDownHandler);
+            this.canvas.addEventListener('mouseup', this.canvasMouseUpHandler);
+            document.addEventListener('mouseup', this.canvasMouseUpHandler); // Global fallback
+        }
+
+        // Added Touch Support (mobile only)
         this.canvasTouchHandler = (e) => this.handleCanvasTouch(e);
         this.canvas.addEventListener('touchstart', this.canvasTouchHandler, { passive: false });
 
         this.canvas.style.cursor = 'pointer';
+        console.log('[Deployment] Deployment mode enabled');
     }
 
     /**
@@ -268,13 +475,29 @@ class DeploymentManager {
     disable() {
         this.canvas.removeEventListener('click', this.canvasClickHandler);
         this.canvas.removeEventListener('mousemove', this.canvasMouseMoveHandler);
+
+        // Remove drag handlers
+        if (!window.isMobile) {
+            this.canvas.removeEventListener('mousedown', this.canvasMouseDownHandler);
+            this.canvas.removeEventListener('mouseup', this.canvasMouseUpHandler);
+            document.removeEventListener('mouseup', this.canvasMouseUpHandler); // Remove global fallback
+        }
+
         // Remove Touch Support
         if (this.canvasTouchHandler) {
             this.canvas.removeEventListener('touchstart', this.canvasTouchHandler);
             this.canvasTouchHandler = null;
         }
 
+        // Reset drag state
+        this.isDragging = false;
+        this.dragStartX = null;
+        this.dragStartY = null;
+        this.dragCurrentX = null;
+        this.dragCurrentY = null;
+
         this.canvas.style.cursor = 'crosshair';
+        console.log('[Deployment] Deployment mode disabled');
     }
 
     /**

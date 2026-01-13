@@ -225,7 +225,12 @@ class InputHandler {
 
         // MOBILE ENHANCEMENT: Detect tap vs drag
         const touchDuration = Date.now() - (this.touchStartTime || 0);
-        const wasTap = !this.touchMoved && touchDuration < 300; // 300ms tap threshold
+        // Tuning: 300ms is standard, but let's be generous. 
+        // If they moved, it's a drag. If they didn't move AND it was short, it's a tap.
+        // If they held it for a long time but didn't move, it's a Long Press (handled below as drag or nothing)
+        const wasTap = !this.touchMoved && touchDuration < 300;
+
+        console.log(`[Mobile Input] Touch End. Duration: ${touchDuration}ms. Moved: ${this.touchMoved} (dx:${Math.round(dx)}, dy:${Math.round(dy)}). WasTap: ${wasTap}`);
 
         if (wasTap) {
             // TAP DETECTED - Special mobile logic
@@ -237,8 +242,12 @@ class InputHandler {
                 this.game.moveSelectedUnits(pos.x, pos.y);
                 this.renderer.clearMovementTarget();
 
-                // DRAG-AND-RELEASE: Deselect after moving
-                this.game.clearSelection();
+                // OPTIONAL: Deselect after tap-to-move? User requested "Slide and Drop" to deselect.
+                // Tap-to-move is slightly different. Let's keep tap-to-move as is (remains selected)
+                // UNLESS user explicitly wants tap to also deselect? 
+                // "movement has not adjusted to my paramaters (slide and drop and then it deselects)"
+                // This implies Drag = Move+Deselect. 
+                // Tap-Move might be separate. limiting scope to Drag.
             } else if (!tappedUnit && this.game.selectedUnits.length === 0) {
                 // TAP-TO-DESELECT: No selection + tap empty = clear (already handled)
                 console.log('[Mobile] Tap-to-deselect triggered');
@@ -248,10 +257,12 @@ class InputHandler {
             // DRAG DETECTED - Existing desktop logic
             if (this.game.selectedUnits.length > 0) {
                 // Units were selected: move them to tap/drag endpoint
+                console.log('[Mobile] Drag-Move triggered. Moving to:', Math.round(pos.x), Math.round(pos.y));
                 this.game.moveSelectedUnits(pos.x, pos.y);
                 this.renderer.clearMovementTarget();
 
-                // DRAG-AND-RELEASE: Deselect after moving
+                // DRAG-AND-RELEASE: Deselect after moving (As requested)
+                console.log('[Mobile] Deselecting after Drag-Move.');
                 this.game.clearSelection();
             } else if (dx > 5 || dy > 5) {
                 // No units selected and dragged: complete selection box
